@@ -1,0 +1,191 @@
+import { it, expect } from "@jest/globals";
+import { assign, declare, group, identifier, log, nil, string } from "./ast";
+import { hoistVariables } from "./variableHoisting";
+
+it("should do nothing when variable is only referenced in the same scope", () => {
+  const input = group("root", [
+    declare("const", "a", string("")),
+    log(identifier("a")),
+  ]);
+
+  const expected = group("root", [
+    declare("const", "a", string("")),
+    log(identifier("a")),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("should do nothing when variable is referenced in a child scope", () => {
+  const input = group("root", [
+    declare("const", "a", string("")),
+
+    group("child", [log(identifier("a"))]),
+  ]);
+
+  const expected = group("root", [
+    declare("const", "a", string("")),
+
+    group("child", [log(identifier("a"))]),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("it should do nothing when variable is re-declared in child scope and not referenced outside it", () => {
+  const input = group("root", [
+    declare("const", "a", string("")),
+
+    group("child", [declare("const", "a", string("")), log(identifier("a"))]),
+  ]);
+
+  const expected = group("root", [
+    declare("const", "a", string("")),
+
+    group("child", [declare("const", "a", string("")), log(identifier("a"))]),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("should hoist declaration to same scope as the variabled reference", () => {
+  const input = group("root", [
+    group("child", [declare("const", "a", string(""))]),
+
+    log(identifier("a")),
+  ]);
+
+  const expected = group("root", [
+    declare("let", "a", nil()),
+
+    group("child", [assign("a", string(""))]),
+
+    log(identifier("a")),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("it should hoist declaration to a scope so that all references can access it", () => {
+  const input = group("root", [
+    group("child", [declare("const", "a", string(""))]),
+
+    group("child2", [log(identifier("a"))]),
+  ]);
+
+  const expected = group("root", [
+    declare("let", "a", nil()),
+
+    group("child", [assign("a", string(""))]),
+
+    group("child2", [log(identifier("a"))]),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("it should insert declaration before the group where it was hoisted from", () => {
+  const input = group("root", [
+    declare("const", "a", string("")),
+
+    group("child", [declare("const", "b", string(""))]),
+
+    group("child", [declare("const", "c", string(""))]),
+
+    log(identifier("b")),
+  ]);
+
+  const expected = group("root", [
+    declare("const", "a", string("")),
+
+    group("child", [declare("const", "b", string(""))]),
+
+    declare("let", "c", nil()),
+
+    group("child", [assign("c", string(""))]),
+
+    log(identifier("c")),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("it should hoist declaration from nested scopes", () => {
+  const input = group("root", [
+    group("child", [group("child2", [declare("const", "a", string(""))])]),
+
+    log(identifier("a")),
+  ]);
+
+  const expected = group("root", [
+    declare("let", "a", nil()),
+
+    group("child", [group("child2", [assign("a", string(""))])]),
+
+    log(identifier("a")),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("it should re-use declaration when declaration with same name is hoisted to the same scope", () => {
+  const input = group("root", [
+    declare("const", "a", string("")),
+
+    group("child", [declare("const", "a", string(""))]),
+
+    group("child2", [log(identifier("a"))]),
+  ]);
+
+  const expected = group("root", [
+    declare("let", "a", string("")),
+
+    group("child", [assign("a", string(""))]),
+
+    group("child2", [log(identifier("a"))]),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
+
+it("should hoist re-declared variables to the scope where they are visible to the remaining references", () => {
+  const input = group("root", [
+    group("child", [declare("const", "a", string(""))]),
+
+    group("child2", [log(identifier("a"))]),
+
+    group("child3", [
+      group("child4", [declare("const", "a", string(""))]),
+
+      group("child5", [log(identifier("a"))]),
+    ]),
+
+    group("child6", [declare("const", "b", string(""))]),
+
+    log(identifier("b")),
+  ]);
+
+  const expected = group("root", [
+    declare("let", "a", nil()),
+
+    group("child", [assign("a", string(""))]),
+
+    group("child2", [log(identifier("a"))]),
+
+    group("child3", [
+      declare("let", "a", nil()),
+
+      group("child4", [assign("a", string(""))]),
+
+      group("child5", [log(identifier("a"))]),
+    ]),
+
+    declare("const", "b", nil()),
+
+    group("child6", [assign("b", string(""))]),
+
+    log(identifier("b")),
+  ]);
+
+  expect(hoistVariables(input)).toEqual(expected);
+});
