@@ -122,10 +122,10 @@ it("should keep track of declarations", () => {
 it("should keep track of references to declarations", () => {
   const declaration = declare("const", "a", string(""));
 
-  const log1 = log(identifier("a"));
-  const log2 = log(identifier("a"));
+  const reference1 = identifier("a");
+  const reference2 = identifier("a");
 
-  const root = group("root", [declaration, log1, log2]);
+  const root = group("root", [declaration, log(reference1), log(reference2)]);
 
   const analysis = analyze(root);
 
@@ -144,30 +144,12 @@ it("should keep track of references to declarations", () => {
       node: declaration,
       references: [
         {
-          id: "/1",
-          index: 1,
           path: [1],
-          parent: {
-            id: "/",
-            index: 0,
-            path: [],
-            parent: null,
-            node: root,
-          },
-          node: log1,
+          node: reference1,
         },
         {
-          id: "/2",
-          index: 2,
           path: [2],
-          parent: {
-            id: "/",
-            index: 0,
-            path: [],
-            parent: null,
-            node: root,
-          },
-          node: log2,
+          node: reference2,
         },
       ],
     },

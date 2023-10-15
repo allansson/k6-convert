@@ -1,23 +1,23 @@
 import {
   analyze,
   type Analysis,
-  type Declaration,
-  type Reference,
-  type ScopePath,
+  type DeclarationInfo,
   type NodeId,
+  type NodePath,
+  type ReferenceInfo,
 } from "./analysis";
-import type { Statement } from "./ast";
+import type { GroupStatement, Statement } from "./ast";
 import { rewrite, type RewriteMap } from "./rewrite";
 import { Chain } from "./utils";
 
-function toScopeId(path: ScopePath): NodeId {
+function toScopeId(path: NodePath): NodeId {
   return "/" + path.join("/");
 }
 
 function findSharedScope(
   { scopes }: Analysis,
-  declaration: Declaration,
-  references: Reference[]
+  declaration: DeclarationInfo,
+  references: ReferenceInfo[]
 ) {
   for (let i = 0; i < declaration.scope.length; i++) {
     for (const reference of references) {
@@ -68,7 +68,7 @@ function applyRewrites(statement: Statement) {
   return (rewrites: RewriteMap) => rewrite(statement, rewrites);
 }
 
-export function hoistVariables(statement: Statement): Statement {
+export function hoistVariables(statement: GroupStatement): Statement {
   return new Chain(statement)
     .map(analyze)
     .log("analysis")

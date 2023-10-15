@@ -92,6 +92,7 @@ export {
   type DeclarationInfo,
   type NodeId,
   type NodePath,
+  type ReferenceInfo,
   type ScopeInfo,
   type ScopedStatement,
   type StatementInfo,

@@ -40,6 +40,7 @@ export type {
   DeclarationInfo,
   NodeId,
   NodePath,
+  ReferenceInfo,
   ScopeInfo,
   StatementInfo,
 } from "./analysis";
