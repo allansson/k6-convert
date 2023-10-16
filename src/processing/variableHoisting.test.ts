@@ -1,5 +1,5 @@
 import { expect, it } from "@jest/globals";
-import { assign, declare, group, identifier, log, nil, string } from "./ast";
+import { assign, declare, group, identifier, log, nil, string } from "../ast";
 import { hoistVariables } from "./variableHoisting";
 
 it("should do nothing when variable is only referenced in the same scope", () => {

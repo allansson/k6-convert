@@ -4,16 +4,16 @@ import {
   type Analysis,
   type DeclarationInfo,
   type NodeId,
-} from "./analysis";
+} from "../analysis";
 import {
   assign,
   declare,
   nil,
   type GroupStatement,
   type Statement,
-} from "./ast";
+} from "../ast";
+import { Chain } from "../utils";
 import { insertBefore, replace, rewrite, type RewriteMap } from "./rewrite";
-import { Chain } from "./utils";
 
 function findSharedScope(declaration: DeclarationInfo): NodeId {
   for (let i = 0; i < declaration.scope.path.length; i++) {

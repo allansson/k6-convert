@@ -1,13 +1,13 @@
-import { it, expect } from "@jest/globals";
+import { expect, it } from "@jest/globals";
+import { group, log, nil, sleep } from "../ast";
 import {
-  type RewriteMap,
-  rewrite,
-  insertBefore,
   insertAfter,
-  replace,
+  insertBefore,
   remove,
+  replace,
+  rewrite,
+  type RewriteMap,
 } from "./rewrite";
-import { group, log, nil, sleep } from "./ast";
 
 it("should insert statement before node in group", () => {
   const target = sleep(1);

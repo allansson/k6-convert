@@ -1,4 +1,4 @@
-import type { Statement } from "./ast";
+import type { Statement } from "../ast";
 
 interface InsertBefore {
   type: "InsertBefore";
