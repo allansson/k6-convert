@@ -1,4 +1,4 @@
-import type { NodeId, NodePath } from "../analysis";
+import type { NodeId, NodePath, ScopeInfo } from "../analysis";
 import type {
   AssignStatement,
   LogStatement,
@@ -6,6 +6,7 @@ import type {
   UserVariableDeclaration,
 } from "../ast";
 import {
+  report,
   withIndex,
   type AnalysisContext,
   type ScopedStatement,
@@ -21,6 +22,11 @@ function analyzeScopedStatement(
   statement: ScopedStatement,
   context: AnalysisContext
 ): AnalysisContext {
+  const scope: ScopeInfo = {
+    ...context.self,
+    node: statement,
+  };
+
   const newContext = statement.statements.reduce((result, statement, index) => {
     const childPath = [...context.self.path, index];
     const childId = toNodeId(childPath);
@@ -29,6 +35,7 @@ function analyzeScopedStatement(
       id: childId,
       index: index,
       path: childPath,
+      scope,
       parent: context.self,
       node: statement,
     };
@@ -46,10 +53,7 @@ function analyzeScopedStatement(
     self: context.self,
     scopes: {
       ...newContext.scopes,
-      [context.self.id]: {
-        ...context.self,
-        node: statement,
-      },
+      [context.self.id]: scope,
     },
   };
 }
@@ -58,17 +62,36 @@ function analyzeDeclaration(
   statement: UserVariableDeclaration,
   context: AnalysisContext
 ): AnalysisContext {
-  return {
-    ...context,
-    declarations: [
-      ...context.declarations,
-      {
-        ...context.self,
-        node: statement,
-        references: [],
-      },
-    ],
+  const isRedclared = statement.name in context.frame;
+
+  const info = {
+    id: context.self.id,
+    index: context.self.index,
+    path: context.self.path,
+    scope: context.self.scope,
+    parent: context.self.parent,
+    node: statement,
+    references: [],
   };
+
+  const newContext = {
+    ...context,
+    frame: {
+      ...context.frame,
+      [statement.name]: info,
+    },
+    declarations: [...context.declarations, info],
+  };
+
+  return isRedclared
+    ? report(newContext, {
+        type: "DuplicateVariableDeclaration",
+        others: context.declarations
+          .filter((declaration) => declaration.node.name === statement.name)
+          .map((declaration) => declaration.node),
+        node: statement,
+      })
+    : newContext;
 }
 
 function analyzeAssignStatement(

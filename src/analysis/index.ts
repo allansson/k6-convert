@@ -7,12 +7,14 @@ function rootContext(statement: ScopedStatement): AnalysisContext {
     id: "/",
     index: 0,
     path: [],
+    scope: null,
     parent: null,
     node: statement,
   };
 
   return {
     self,
+    frame: {},
     statements: {
       [self.id]: self,
     },
@@ -23,7 +25,7 @@ function rootContext(statement: ScopedStatement): AnalysisContext {
 }
 
 function analyze(statement: ScopedStatement): Analysis {
-  const { statements, scopes, declarations } = analyzeScopedStatement(
+  const { statements, scopes, declarations, issues } = analyzeScopedStatement(
     statement,
     rootContext(statement)
   );
@@ -32,6 +34,7 @@ function analyze(statement: ScopedStatement): Analysis {
     statements,
     scopes,
     declarations,
+    issues,
   };
 }
 

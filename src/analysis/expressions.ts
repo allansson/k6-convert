@@ -1,29 +1,15 @@
 import type { Expression, IdentifierExpression } from "../ast";
-import { reverse } from "../utils";
-import { report, type AnalysisContext, type DeclarationInfo } from "./analysis";
-
-function findDeclaration(
-  name: string,
-  context: AnalysisContext
-): DeclarationInfo | null {
-  for (const declaration of reverse(context.declarations)) {
-    if (declaration.node.name === name) {
-      return declaration;
-    }
-  }
-
-  return null;
-}
+import { report, type AnalysisContext } from "./analysis";
 
 function analyzeIdentifierExpression(
   expression: IdentifierExpression,
   context: AnalysisContext
 ): AnalysisContext {
-  const declaration = findDeclaration(expression.name, context);
+  const declaration = context.frame[expression.name];
 
-  if (declaration === null) {
+  if (declaration === undefined) {
     return report(context, {
-      type: "UndeclaredVariableIssue",
+      type: "UndeclaredVariable",
       node: expression,
     });
   }
@@ -41,6 +27,10 @@ function analyzeIdentifierExpression(
 
   return {
     ...context,
+    frame: {
+      ...context.frame,
+      [expression.name]: newDeclaration,
+    },
     declarations: context.declarations.map((declaration) =>
       declaration.id === newDeclaration.id ? newDeclaration : declaration
     ),

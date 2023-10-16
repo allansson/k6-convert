@@ -7,11 +7,17 @@ import type {
 } from "../ast";
 
 interface UndeclaredVariableIssue {
-  type: "UndeclaredVariableIssue";
+  type: "UndeclaredVariable";
   node: IdentifierExpression;
 }
 
-type Issue = UndeclaredVariableIssue;
+interface DuplicateVariableDeclarationIssue {
+  type: "DuplicateVariableDeclaration";
+  others: UserVariableDeclaration[];
+  node: UserVariableDeclaration;
+}
+
+type Issue = UndeclaredVariableIssue | DuplicateVariableDeclarationIssue;
 
 type ScopedStatement = GroupStatement;
 
@@ -22,6 +28,7 @@ interface NodeInfo<N extends AstNode = AstNode> {
   id: NodeId;
   index: number;
   path: NodePath;
+  scope: ScopeInfo | null;
   parent: NodeInfo | null;
   node: N;
 }
@@ -37,10 +44,14 @@ type DeclarationInfo = NodeInfo<UserVariableDeclaration> & {
   references: ReferenceInfo[];
 };
 
+type DeclarationFrame = Record<string, DeclarationInfo>;
+
 type NodeMap<N> = Record<NodeId, N>;
 
 interface AnalysisContext {
   self: StatementInfo;
+
+  frame: DeclarationFrame;
 
   statements: NodeMap<StatementInfo>;
   scopes: NodeMap<ScopeInfo>;
@@ -53,6 +64,8 @@ interface Analysis {
   statements: Record<NodeId, StatementInfo>;
   scopes: Record<NodeId, ScopeInfo>;
   declarations: DeclarationInfo[];
+
+  issues: Issue[];
 }
 
 type AnalysisFn<N extends AstNode> = (
