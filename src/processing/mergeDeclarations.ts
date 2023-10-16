@@ -2,10 +2,10 @@ import { analyze } from "../analysis";
 import type { Analysis, ScopedStatement } from "../analysis/analysis";
 import { assign, declare, type Statement } from "../ast";
 import { Chain, groupBy } from "../utils";
-import { applyRewrites, replace, type RewriteMap } from "./rewrite";
+import { Rewriter, applyRewrites, type RewriteMap } from "./rewrite";
 
 function generateRewrites(analysis: Analysis): RewriteMap {
-  const rewrites: RewriteMap = new Map();
+  const rewriter = new Rewriter();
 
   const declarationsByScope = groupBy(
     analysis.declarations,
@@ -25,21 +25,21 @@ function generateRewrites(analysis: Analysis): RewriteMap {
         continue;
       }
 
-      rewrites.set(
+      rewriter.replace(
         first.node,
-        replace(declare("let", first.node.name, first.node.expression))
+        declare("let", first.node.name, first.node.expression)
       );
 
       for (const duplicate of duplicates) {
-        rewrites.set(
+        rewriter.replace(
           duplicate.node,
-          replace(assign(duplicate.node.name, duplicate.node.expression))
+          assign(duplicate.node.name, duplicate.node.expression)
         );
       }
     }
   }
 
-  return rewrites;
+  return rewriter.done();
 }
 
 export function mergeDeclarations(statement: ScopedStatement): Statement {

@@ -1,13 +1,6 @@
 import { expect, it } from "@jest/globals";
 import { group, log, nil, sleep } from "../ast";
-import {
-  insertAfter,
-  insertBefore,
-  remove,
-  replace,
-  rewrite,
-  type RewriteMap,
-} from "./rewrite";
+import { Rewriter, rewrite } from "./rewrite";
 
 it("should insert statement before node in group", () => {
   const target = sleep(1);
@@ -15,7 +8,7 @@ it("should insert statement before node in group", () => {
 
   const tree = group("root", [target]);
 
-  const rewrites: RewriteMap = new Map([[target, insertBefore(newNode)]]);
+  const rewrites = new Rewriter().insertBefore(target, newNode).done();
 
   const expected = group("root", [newNode, target]);
 
@@ -28,7 +21,7 @@ it("should insert statement after node in group", () => {
 
   const tree = group("root", [target]);
 
-  const rewrites: RewriteMap = new Map([[target, insertAfter(newNode)]]);
+  const rewrites = new Rewriter().insertAfter(target, newNode).done();
 
   const expected = group("root", [target, newNode]);
 
@@ -41,7 +34,7 @@ it("should replace statement in group", () => {
 
   const tree = group("root", [target]);
 
-  const rewrites: RewriteMap = new Map([[target, replace(newNode)]]);
+  const rewrites = new Rewriter().replace(target, newNode).done();
 
   const expected = group("root", [newNode]);
 
@@ -53,7 +46,7 @@ it("should remove statement from group", () => {
 
   const tree = group("root", [target]);
 
-  const rewrites: RewriteMap = new Map([[target, remove()]]);
+  const rewrites = new Rewriter().remove(target).done();
 
   const expected = group("root", []);
 

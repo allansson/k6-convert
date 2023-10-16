@@ -22,20 +22,47 @@ interface Remove {
 
 type Rewrite = InsertBefore | InsertAfter | Replace | Remove;
 
-function insertBefore(statement: Statement): Rewrite {
-  return { type: "InsertBefore", statement };
-}
+class Rewriter {
+  rewrites: RewriteMap = new Map();
 
-function insertAfter(statement: Statement): Rewrite {
-  return { type: "InsertAfter", statement };
-}
+  insertBefore(target: Statement, newNode: Statement): Rewriter {
+    this.rewrites.set(target, {
+      type: "InsertBefore",
+      statement: newNode,
+    });
 
-function replace(statement: Statement): Rewrite {
-  return { type: "Replace", statement };
-}
+    return this;
+  }
 
-function remove(): Rewrite {
-  return { type: "Remove" };
+  insertAfter(target: Statement, newNode: Statement): Rewriter {
+    this.rewrites.set(target, {
+      type: "InsertAfter",
+      statement: newNode,
+    });
+
+    return this;
+  }
+
+  replace(target: Statement, newNode: Statement): Rewriter {
+    this.rewrites.set(target, {
+      type: "Replace",
+      statement: newNode,
+    });
+
+    return this;
+  }
+
+  remove(target: Statement): Rewriter {
+    this.rewrites.set(target, {
+      type: "Remove",
+    });
+
+    return this;
+  }
+
+  done(): RewriteMap {
+    return this.rewrites;
+  }
 }
 
 type RewriteMap = Map<Statement, Rewrite>;
@@ -82,12 +109,4 @@ function applyRewrites(
   };
 }
 
-export {
-  applyRewrites,
-  insertAfter,
-  insertBefore,
-  remove,
-  replace,
-  rewrite,
-  type RewriteMap,
-};
+export { Rewriter, applyRewrites, rewrite, type RewriteMap };

@@ -13,12 +13,7 @@ import {
   type Statement,
 } from "../ast";
 import { Chain } from "../utils";
-import {
-  applyRewrites,
-  insertBefore,
-  replace,
-  type RewriteMap,
-} from "./rewrite";
+import { Rewriter, applyRewrites, type RewriteMap } from "./rewrite";
 
 function findSharedScope(declaration: DeclarationInfo): NodeId {
   for (let i = 0; i < declaration.scope.path.length; i++) {
@@ -35,7 +30,7 @@ function findSharedScope(declaration: DeclarationInfo): NodeId {
 }
 
 function generateRewrites(analysis: Analysis): RewriteMap {
-  const rewrites: RewriteMap = new Map();
+  const rewriter = new Rewriter();
 
   for (const declaration of analysis.declarations) {
     const scopeId = findSharedScope(declaration);
@@ -52,18 +47,18 @@ function generateRewrites(analysis: Analysis): RewriteMap {
       );
     }
 
-    rewrites.set(
+    rewriter.insertBefore(
       scope.node,
-      insertBefore(declare("let", declaration.node.name, nil()))
+      declare("let", declaration.node.name, nil())
     );
 
-    rewrites.set(
+    rewriter.replace(
       declaration.node,
-      replace(assign(declaration.node.name, declaration.node.expression))
+      assign(declaration.node.name, declaration.node.expression)
     );
   }
 
-  return rewrites;
+  return rewriter.done();
 }
 
 export function hoistVariables(statement: GroupStatement): Statement {
