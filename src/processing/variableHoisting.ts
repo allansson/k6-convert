@@ -13,7 +13,12 @@ import {
   type Statement,
 } from "../ast";
 import { Chain } from "../utils";
-import { insertBefore, replace, rewrite, type RewriteMap } from "./rewrite";
+import {
+  applyRewrites,
+  insertBefore,
+  replace,
+  type RewriteMap,
+} from "./rewrite";
 
 function findSharedScope(declaration: DeclarationInfo): NodeId {
   for (let i = 0; i < declaration.scope.path.length; i++) {
@@ -61,14 +66,9 @@ function generateRewrites(analysis: Analysis): RewriteMap {
   return rewrites;
 }
 
-function applyRewrites(statement: Statement) {
-  return (rewrites: RewriteMap) => rewrite(statement, rewrites);
-}
-
 export function hoistVariables(statement: GroupStatement): Statement {
   return new Chain(statement)
     .map(analyze)
-    .log("analysis")
     .map(generateRewrites)
     .map(applyRewrites(statement))
     .unwrap();

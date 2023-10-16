@@ -1,3 +1,4 @@
+import type { ScopedStatement } from "../analysis/analysis";
 import type { Statement } from "../ast";
 
 interface InsertBefore {
@@ -21,25 +22,25 @@ interface Remove {
 
 type Rewrite = InsertBefore | InsertAfter | Replace | Remove;
 
-export function insertBefore(statement: Statement): Rewrite {
+function insertBefore(statement: Statement): Rewrite {
   return { type: "InsertBefore", statement };
 }
 
-export function insertAfter(statement: Statement): Rewrite {
+function insertAfter(statement: Statement): Rewrite {
   return { type: "InsertAfter", statement };
 }
 
-export function replace(statement: Statement): Rewrite {
+function replace(statement: Statement): Rewrite {
   return { type: "Replace", statement };
 }
 
-export function remove(): Rewrite {
+function remove(): Rewrite {
   return { type: "Remove" };
 }
 
-export type RewriteMap = Map<Statement, Rewrite>;
+type RewriteMap = Map<Statement, Rewrite>;
 
-export function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
+function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
   switch (statement.type) {
     case "GroupStatement":
       return {
@@ -72,3 +73,21 @@ export function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
       return statement;
   }
 }
+
+function applyRewrites(
+  statement: ScopedStatement
+): (rewrites: RewriteMap) => Statement {
+  return (rewrites) => {
+    return rewrite(statement, rewrites);
+  };
+}
+
+export {
+  applyRewrites,
+  insertAfter,
+  insertBefore,
+  remove,
+  replace,
+  rewrite,
+  type RewriteMap,
+};
