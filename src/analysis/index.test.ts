@@ -1,13 +1,22 @@
 import { describe, expect, it } from "@jest/globals";
-import { analyze, type ScopeInfo } from "../analysis";
+import { analyze } from ".";
 import { declare, group, identifier, log, string } from "../ast";
-import type { ScopedStatement } from "./analysis";
+import type { ScopedStatement, ScopedStatementInfo } from "./analysis";
+import { type ScopeInfo } from "./analysis";
 
 function createRootScope(statement: ScopedStatement): ScopeInfo {
   return {
     id: "/",
     path: [],
-    scope: null,
+    node: statement,
+  };
+}
+
+function createRootParent(statement: ScopedStatement): ScopedStatementInfo {
+  return {
+    id: "/",
+    path: [],
+    scope: createRootScope(statement),
     parent: null,
     node: statement,
   };
@@ -23,24 +32,25 @@ describe("indexing", () => {
     const analysis = analyze(root);
 
     const rootScope = createRootScope(root);
+    const rootParent = createRootParent(root);
 
     expect(analysis.statements).toEqual({
-      "/": rootScope,
+      "/": rootParent,
       "/0": {
         id: "/0",
         path: [0],
         scope: rootScope,
-        parent: rootScope,
+        parent: rootParent,
         node: groupNode,
       },
       "/1": {
         id: "/1",
         path: [1],
         scope: rootScope,
-        parent: rootScope,
+        parent: rootParent,
         node: declarationNode,
       },
-    });
+    } satisfies typeof analysis.statements);
   });
 });
 
@@ -51,20 +61,14 @@ describe("scopes", () => {
 
     const analysis = analyze(root);
 
-    const rootScope = createRootScope(root);
-
-    expect(analysis.scopes).toEqual(
-      expect.objectContaining({
-        "/": rootScope,
-        "/0": expect.objectContaining({
-          id: "/0",
-          path: [0],
-          scope: rootScope,
-          parent: rootScope,
-          node: child,
-        }),
-      })
-    );
+    expect(analysis.scopes).toEqual({
+      "/": createRootScope(root),
+      "/0": {
+        id: "/0",
+        path: [0],
+        node: child,
+      },
+    } satisfies typeof analysis.scopes);
   });
 });
 
@@ -78,13 +82,14 @@ describe("declarations", () => {
     const analysis = analyze(root);
 
     const rootScope = createRootScope(root);
+    const rootParent = createRootParent(root);
 
     expect(analysis.declarations).toEqual([
       {
         id: "/0",
         path: [0],
         scope: rootScope,
-        parent: rootScope,
+        parent: rootParent,
         node: declaration1,
         references: [],
       },
@@ -92,11 +97,11 @@ describe("declarations", () => {
         id: "/1",
         path: [1],
         scope: rootScope,
-        parent: rootScope,
+        parent: rootParent,
         node: declaration2,
         references: [],
       },
-    ]);
+    ] satisfies typeof analysis.declarations);
   });
 
   it("should report an issue when a variable is re-declared", () => {
@@ -129,13 +134,14 @@ describe("references", () => {
     const analysis = analyze(root);
 
     const rootScope = createRootScope(root);
+    const rootParent = createRootParent(root);
 
     expect(analysis.declarations).toEqual([
       {
         id: "/0",
         path: [0],
         scope: rootScope,
-        parent: rootScope,
+        parent: rootParent,
         node: declaration,
         references: [
           {
@@ -179,13 +185,14 @@ describe("references", () => {
     const analysis = analyze(root);
 
     const rootScope = createRootScope(root);
+    const rootParent = createRootParent(root);
 
     expect(analysis.declarations).toEqual([
       {
         id: "/0",
         path: [0],
         scope: rootScope,
-        parent: rootScope,
+        parent: rootParent,
         node: declaration,
         references: [
           {

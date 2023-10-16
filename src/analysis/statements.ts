@@ -1,10 +1,10 @@
-import type { NodeId, NodePath, ScopeInfo } from "../analysis";
 import type {
   AssignStatement,
   LogStatement,
   Statement,
   UserVariableDeclaration,
 } from "../ast";
+import type { NodeId, NodePath, ScopeInfo } from "./analysis";
 import {
   report,
   withIndex,
@@ -18,23 +18,18 @@ function toNodeId(path: NodePath): NodeId {
   return "/" + path.join("/");
 }
 
-function analyzeScopedStatement(
-  statement: ScopedStatement,
+function analyzeStatements(
+  statements: Statement[],
   context: AnalysisContext
 ): AnalysisContext {
-  const scope: ScopeInfo = {
-    ...context.self,
-    node: statement,
-  };
-
-  const newContext = statement.statements.reduce((result, statement, index) => {
+  return statements.reduce((result, statement, index) => {
     const childPath = [...context.self.path, index];
     const childId = toNodeId(childPath);
 
     const childScope: StatementInfo = {
       id: childId,
       path: childPath,
-      scope,
+      scope: context.scope,
       parent: context.self,
       node: statement,
     };
@@ -46,10 +41,27 @@ function analyzeScopedStatement(
 
     return analyzeStatement(statement, newContext);
   }, context);
+}
+
+function analyzeScopedStatement(
+  statement: ScopedStatement,
+  context: AnalysisContext
+): AnalysisContext {
+  const scope: ScopeInfo = {
+    id: context.self.id,
+    path: context.self.path,
+    node: statement,
+  };
+
+  const newContext = analyzeStatements(statement.statements, {
+    ...context,
+    scope,
+  });
 
   return {
     ...newContext,
     self: context.self,
+    scope: context.scope,
     scopes: {
       ...newContext.scopes,
       [context.self.id]: scope,
@@ -127,4 +139,4 @@ const analyzeStatement = withIndex(
   }
 );
 
-export { analyzeScopedStatement };
+export { analyzeScopedStatement, analyzeStatements };

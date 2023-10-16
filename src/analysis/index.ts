@@ -1,31 +1,45 @@
-import type { Analysis } from "../analysis";
-import type { AnalysisContext, ScopeInfo, ScopedStatement } from "./analysis";
-import { analyzeScopedStatement } from "./statements";
+import type {
+  Analysis,
+  AnalysisContext,
+  ScopedStatement,
+  ScopedStatementInfo,
+  ScopeInfo,
+} from "./analysis";
+import { analyzeStatements } from "./statements";
 
 function rootContext(statement: ScopedStatement): AnalysisContext {
-  const self: ScopeInfo = {
+  const scope: ScopeInfo = {
     id: "/",
     path: [],
-    scope: null,
+    node: statement,
+  };
+
+  const self: ScopedStatementInfo = {
+    id: "/",
+    path: [],
+    scope,
     parent: null,
     node: statement,
   };
 
   return {
     self,
+    scope,
     frame: {},
     statements: {
       [self.id]: self,
     },
-    scopes: {},
+    scopes: {
+      [scope.id]: scope,
+    },
     declarations: [],
     issues: [],
   };
 }
 
 function analyze(statement: ScopedStatement): Analysis {
-  const { statements, scopes, declarations, issues } = analyzeScopedStatement(
-    statement,
+  const { statements, scopes, declarations, issues } = analyzeStatements(
+    statement.statements,
     rootContext(statement)
   );
 
@@ -43,7 +57,7 @@ export type {
   NodeId,
   NodePath,
   ReferenceInfo,
-  ScopeInfo,
+  ScopedStatementInfo as ScopeInfo,
   StatementInfo,
 } from "./analysis";
 

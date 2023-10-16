@@ -27,7 +27,7 @@ type NodePath = number[];
 interface NodeInfo<N extends AstNode = AstNode> {
   id: NodeId;
   path: NodePath;
-  scope: ScopeInfo | null;
+  scope: ScopeInfo;
   parent: NodeInfo | null;
   node: N;
 }
@@ -37,7 +37,13 @@ interface ReferenceInfo {
   node: IdentifierExpression;
 }
 
-type ScopeInfo = NodeInfo<ScopedStatement>;
+interface ScopeInfo {
+  id: NodeId;
+  path: NodePath;
+  node: ScopedStatement;
+}
+
+type ScopedStatementInfo = NodeInfo<ScopedStatement>;
 type StatementInfo = NodeInfo<Statement>;
 type DeclarationInfo = NodeInfo<UserVariableDeclaration> & {
   references: ReferenceInfo[];
@@ -49,6 +55,7 @@ type NodeMap<N> = Record<NodeId, N>;
 
 interface AnalysisContext {
   self: StatementInfo;
+  scope: ScopeInfo;
 
   frame: DeclarationFrame;
 
@@ -107,5 +114,6 @@ export {
   type ReferenceInfo,
   type ScopeInfo,
   type ScopedStatement,
+  type ScopedStatementInfo,
   type StatementInfo,
 };
