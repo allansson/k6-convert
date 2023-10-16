@@ -1,5 +1,5 @@
 import type { Expression, IdentifierExpression } from "../ast";
-import { report, type AnalysisContext } from "./analysis";
+import { report, type AnalysisContext, type DeclarationInfo } from "./analysis";
 
 function analyzeIdentifierExpression(
   expression: IdentifierExpression,
@@ -14,7 +14,7 @@ function analyzeIdentifierExpression(
     });
   }
 
-  const newDeclaration = {
+  const newDeclaration: DeclarationInfo = {
     ...declaration,
     references: [
       ...declaration.references,
