@@ -5,7 +5,6 @@ import { analyzeScopedStatement } from "./statements";
 function rootContext(statement: ScopedStatement): AnalysisContext {
   const self: ScopeInfo = {
     id: "/",
-    index: 0,
     path: [],
     scope: null,
     parent: null,

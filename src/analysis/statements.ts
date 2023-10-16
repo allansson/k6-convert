@@ -33,7 +33,6 @@ function analyzeScopedStatement(
 
     const childScope: StatementInfo = {
       id: childId,
-      index: index,
       path: childPath,
       scope,
       parent: context.self,
@@ -66,7 +65,6 @@ function analyzeDeclaration(
 
   const info = {
     id: context.self.id,
-    index: context.self.index,
     path: context.self.path,
     scope: context.self.scope,
     parent: context.self.parent,

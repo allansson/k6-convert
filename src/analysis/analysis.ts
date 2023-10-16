@@ -26,7 +26,6 @@ type NodePath = number[];
 
 interface NodeInfo<N extends AstNode = AstNode> {
   id: NodeId;
-  index: number;
   path: NodePath;
   scope: ScopeInfo | null;
   parent: NodeInfo | null;

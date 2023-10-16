@@ -6,7 +6,6 @@ import type { ScopedStatement } from "./analysis";
 function createRootScope(statement: ScopedStatement): ScopeInfo {
   return {
     id: "/",
-    index: 0,
     path: [],
     scope: null,
     parent: null,
@@ -29,7 +28,6 @@ describe("indexing", () => {
       "/": rootScope,
       "/0": {
         id: "/0",
-        index: 0,
         path: [0],
         scope: rootScope,
         parent: rootScope,
@@ -37,7 +35,6 @@ describe("indexing", () => {
       },
       "/1": {
         id: "/1",
-        index: 1,
         path: [1],
         scope: rootScope,
         parent: rootScope,
@@ -62,7 +59,6 @@ describe("scopes", () => {
         "/0": expect.objectContaining({
           id: "/0",
           path: [0],
-          index: 0,
           scope: rootScope,
           parent: rootScope,
           node: child,
@@ -86,7 +82,6 @@ describe("declarations", () => {
     expect(analysis.declarations).toEqual([
       {
         id: "/0",
-        index: 0,
         path: [0],
         scope: rootScope,
         parent: rootScope,
@@ -95,7 +90,6 @@ describe("declarations", () => {
       },
       {
         id: "/1",
-        index: 1,
         path: [1],
         scope: rootScope,
         parent: rootScope,
@@ -139,7 +133,6 @@ describe("references", () => {
     expect(analysis.declarations).toEqual([
       {
         id: "/0",
-        index: 0,
         path: [0],
         scope: rootScope,
         parent: rootScope,
@@ -190,7 +183,6 @@ describe("references", () => {
     expect(analysis.declarations).toEqual([
       {
         id: "/0",
-        index: 0,
         path: [0],
         scope: rootScope,
         parent: rootScope,
