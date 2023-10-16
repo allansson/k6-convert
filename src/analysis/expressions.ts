@@ -19,7 +19,9 @@ function analyzeIdentifierExpression(
     references: [
       ...declaration.references,
       {
+        id: context.self.id,
         path: context.self.path,
+        scope: context.scope,
         node: expression,
       },
     ],

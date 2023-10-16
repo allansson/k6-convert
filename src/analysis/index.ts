@@ -51,14 +51,16 @@ function analyze(statement: ScopedStatement): Analysis {
   };
 }
 
-export type {
-  Analysis,
-  DeclarationInfo,
-  NodeId,
-  NodePath,
-  ReferenceInfo,
-  ScopedStatementInfo as ScopeInfo,
-  StatementInfo,
+export {
+  toNodeId,
+  type Analysis,
+  type DeclarationInfo,
+  type NodeId,
+  type NodePath,
+  type ReferenceInfo,
+  type ScopedStatementInfo,
+  type ScopeInfo,
+  type StatementInfo,
 } from "./analysis";
 
 export { analyze };

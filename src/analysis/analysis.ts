@@ -33,7 +33,9 @@ interface NodeInfo<N extends AstNode = AstNode> {
 }
 
 interface ReferenceInfo {
+  id: NodeId;
   path: NodePath;
+  scope: ScopeInfo;
   node: IdentifierExpression;
 }
 

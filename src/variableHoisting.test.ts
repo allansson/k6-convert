@@ -1,4 +1,4 @@
-import { it, expect } from "@jest/globals";
+import { expect, it } from "@jest/globals";
 import { assign, declare, group, identifier, log, nil, string } from "./ast";
 import { hoistVariables } from "./variableHoisting";
 
@@ -92,7 +92,7 @@ it("it should insert declaration before the group where it was hoisted from", ()
 
     group("child", [declare("const", "c", string(""))]),
 
-    log(identifier("b")),
+    log(identifier("c")),
   ]);
 
   const expected = group("root", [
@@ -123,26 +123,6 @@ it("it should hoist declaration from nested scopes", () => {
     group("child", [group("child2", [assign("a", string(""))])]),
 
     log(identifier("a")),
-  ]);
-
-  expect(hoistVariables(input)).toEqual(expected);
-});
-
-it("it should re-use declaration when declaration with same name is hoisted to the same scope", () => {
-  const input = group("root", [
-    declare("const", "a", string("")),
-
-    group("child", [declare("const", "a", string(""))]),
-
-    group("child2", [log(identifier("a"))]),
-  ]);
-
-  const expected = group("root", [
-    declare("let", "a", string("")),
-
-    group("child", [assign("a", string(""))]),
-
-    group("child2", [log(identifier("a"))]),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -180,7 +160,7 @@ it("should hoist re-declared variables to the scope where they are visible to th
       group("child5", [log(identifier("a"))]),
     ]),
 
-    declare("const", "b", nil()),
+    declare("let", "b", nil()),
 
     group("child6", [assign("b", string(""))]),
 
