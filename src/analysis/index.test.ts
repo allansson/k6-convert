@@ -148,16 +148,20 @@ describe("references", () => {
         node: declaration,
         references: [
           {
+            id: "/1",
             path: [1],
+            scope: rootScope,
             node: reference1,
           },
           {
+            id: "/2",
             path: [2],
+            scope: rootScope,
             node: reference2,
           },
         ],
       },
-    ]);
+    ] satisfies typeof analysis.declarations);
   });
 
   it("should report an issue when referencing an undeclare variable", () => {
@@ -178,17 +182,38 @@ describe("references", () => {
   });
 
   it("should reference the latest declaration of a variable", () => {
-    const declaration = declare("const", "a", string(""));
+    const declaration1 = declare("const", "a", string(""));
+    const declaration2 = declare("const", "a", string(""));
 
     const reference1 = identifier("a");
     const reference2 = identifier("a");
 
-    const root = group("root", [declaration, log(reference1), log(reference2)]);
+    const child = group("child", [
+      declaration2,
+      log(reference1),
+      log(reference2),
+    ]);
+
+    const root = group("root", [declaration1, child]);
 
     const analysis = analyze(root);
 
     const rootScope = createRootScope(root);
     const rootParent = createRootParent(root);
+
+    const childScope = {
+      id: "/1",
+      path: [1],
+      node: child,
+    };
+
+    const childParent = {
+      id: "/1",
+      path: [1],
+      scope: rootScope,
+      parent: rootParent,
+      node: child,
+    };
 
     expect(analysis.declarations).toEqual([
       {
@@ -196,18 +221,30 @@ describe("references", () => {
         path: [0],
         scope: rootScope,
         parent: rootParent,
-        node: declaration,
+        node: declaration1,
+        references: [],
+      },
+      {
+        id: "/1/0",
+        path: [1, 0],
+        scope: childScope,
+        parent: childParent,
+        node: declaration2,
         references: [
           {
-            path: [1],
+            id: "/1/1",
+            path: [1, 1],
+            scope: childScope,
             node: reference1,
           },
           {
-            path: [2],
+            id: "/1/2",
+            path: [1, 2],
+            scope: childScope,
             node: reference2,
           },
         ],
       },
-    ]);
+    ] satisfies typeof analysis.declarations);
   });
 });
