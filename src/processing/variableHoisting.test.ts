@@ -1,6 +1,6 @@
 import { expect, it } from "@jest/globals";
-import { assign, declare, group, identifier, log, nil, string } from "../ast";
-import { hoistVariables } from "./variableHoisting";
+import { assign, declare, group, identifier, log, nil, string } from "src/ast";
+import { hoistVariables } from "src/processing/variableHoisting";
 
 it("should do nothing when variable is only referenced in the same scope", () => {
   const input = group("root", [

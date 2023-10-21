@@ -1,18 +1,18 @@
-import type {
-  AssignStatement,
-  LogStatement,
-  Statement,
-  UserVariableDeclaration,
-} from "../ast";
-import type { NodeId, NodePath, ScopeInfo } from "./analysis";
+import type { NodeId, NodePath, ScopeInfo } from "src/analysis/analysis";
 import {
   report,
   withIndex,
   type AnalysisContext,
   type ScopedStatement,
   type StatementInfo,
-} from "./analysis";
-import { analyzeExpression } from "./expressions";
+} from "src/analysis/analysis";
+import { analyzeExpression } from "src/analysis/expressions";
+import type {
+  AssignStatement,
+  LogStatement,
+  Statement,
+  UserVariableDeclaration,
+} from "src/ast";
 
 function toNodeId(path: NodePath): NodeId {
   return "/" + path.join("/");

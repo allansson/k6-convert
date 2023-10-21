@@ -1,8 +1,11 @@
-import { analyze } from "../analysis";
-import type { Analysis, ScopedStatement } from "../analysis/analysis";
-import { assign, declare, type Statement } from "../ast";
-import { Chain, groupBy } from "../utils";
-import { Rewriter, applyRewrites, type RewriteMap } from "./rewrite";
+import { analyze, type Analysis, type ScopedStatement } from "src/analysis";
+import { assign, declare, type Statement } from "src/ast";
+import {
+  Rewriter,
+  applyRewrites,
+  type RewriteMap,
+} from "src/processing/rewrite";
+import { Chain, groupBy } from "src/utils";
 
 function generateRewrites(analysis: Analysis): RewriteMap {
   const rewriter = new Rewriter();

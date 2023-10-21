@@ -4,8 +4,8 @@ import type {
   ScopedStatement,
   ScopedStatementInfo,
   ScopeInfo,
-} from "./analysis";
-import { analyzeStatements } from "./statements";
+} from "src/analysis/analysis";
+import { analyzeStatements } from "src/analysis/statements";
 
 function rootContext(statement: ScopedStatement): AnalysisContext {
   const scope: ScopeInfo = {
@@ -58,9 +58,10 @@ export {
   type NodeId,
   type NodePath,
   type ReferenceInfo,
+  type ScopedStatement,
   type ScopedStatementInfo,
   type ScopeInfo,
   type StatementInfo,
-} from "./analysis";
+} from "src/analysis/analysis";
 
 export { analyze };

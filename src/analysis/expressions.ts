@@ -1,5 +1,9 @@
-import type { Expression, IdentifierExpression } from "../ast";
-import { report, type AnalysisContext, type DeclarationInfo } from "./analysis";
+import {
+  report,
+  type AnalysisContext,
+  type DeclarationInfo,
+} from "src/analysis/analysis";
+import type { Expression, IdentifierExpression } from "src/ast";
 
 function analyzeIdentifierExpression(
   expression: IdentifierExpression,

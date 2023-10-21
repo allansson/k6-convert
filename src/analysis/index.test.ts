@@ -1,8 +1,11 @@
 import { describe, expect, it } from "@jest/globals";
-import { analyze } from ".";
-import { declare, group, identifier, log, string } from "../ast";
-import type { ScopedStatement, ScopedStatementInfo } from "./analysis";
-import { type ScopeInfo } from "./analysis";
+import {
+  analyze,
+  type ScopeInfo,
+  type ScopedStatement,
+  type ScopedStatementInfo,
+} from "src/analysis";
+import { declare, group, identifier, log, string } from "src/ast";
 
 function createRootScope(statement: ScopedStatement): ScopeInfo {
   return {
