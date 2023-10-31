@@ -12,7 +12,7 @@ import type {
   LogStatement,
   Statement,
   UserVariableDeclaration,
-} from "src/ast";
+} from "src/convert/ast";
 
 function toNodeId(path: NodePath): NodeId {
   return "/" + path.join("/");

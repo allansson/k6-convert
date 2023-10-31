@@ -4,7 +4,7 @@ import type {
   IdentifierExpression,
   Statement,
   UserVariableDeclaration,
-} from "src/ast";
+} from "src/convert/ast";
 
 interface UndeclaredVariableIssue {
   type: "UndeclaredVariable";

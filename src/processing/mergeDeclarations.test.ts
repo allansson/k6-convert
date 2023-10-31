@@ -1,5 +1,5 @@
 import { expect, it } from "@jest/globals";
-import { assign, declare, group, string } from "src/ast";
+import { assign, declare, group, string } from "src/convert/ast";
 import { mergeDeclarations } from "src/processing/mergeDeclarations";
 
 it("should do nothing when variable is re-declared in a child scope", () => {

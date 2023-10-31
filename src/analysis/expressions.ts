@@ -3,7 +3,7 @@ import {
   type AnalysisContext,
   type DeclarationInfo,
 } from "src/analysis/analysis";
-import type { Expression, IdentifierExpression } from "src/ast";
+import type { Expression, IdentifierExpression } from "src/convert/ast";
 
 function analyzeIdentifierExpression(
   expression: IdentifierExpression,

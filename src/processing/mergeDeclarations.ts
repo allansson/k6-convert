@@ -1,5 +1,5 @@
 import { analyze, type Analysis, type ScopedStatement } from "src/analysis";
-import { assign, declare, type Statement } from "src/ast";
+import { assign, declare, type Statement } from "src/convert/ast";
 import {
   Rewriter,
   applyRewrites,

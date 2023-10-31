@@ -11,7 +11,7 @@ import {
   nil,
   type GroupStatement,
   type Statement,
-} from "src/ast";
+} from "src/convert/ast";
 import {
   Rewriter,
   applyRewrites,
