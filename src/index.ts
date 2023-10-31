@@ -1,1 +1,1 @@
-export function temp() {}
+export { emit } from "~/src/codegen";

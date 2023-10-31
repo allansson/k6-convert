@@ -175,6 +175,7 @@ export {
   sleep,
   string,
   test,
+  type AssignStatement,
   type AstNode,
   type Expression,
   type GroupStatement,
