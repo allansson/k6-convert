@@ -82,6 +82,18 @@ class Parser<T, Optional extends boolean = false> {
   }
 }
 
+function lazy<T, Optional extends boolean>(fn: () => Parser<T, Optional>) {
+  let cached: Parser<T, Optional> | null = null;
+
+  return new Parser<T, Optional>((context) => {
+    if (cached === null) {
+      cached = fn();
+    }
+
+    return cached.parseFn(context);
+  });
+}
+
 function string() {
   return new Parser<string>((context) => {
     if (typeof context.input === "string") {
@@ -150,6 +162,7 @@ function isObject(input: unknown): input is object {
 }
 
 type ParserObject<T> = { [K in keyof T]: Parser<T[K]> };
+
 type ParsedObject<T extends object> = {
   [K in keyof T as T[K] extends Parser<any, false>
     ? K
@@ -399,6 +412,39 @@ function tuple<E extends [...Parser<any>[]]>(...parsers: E) {
   });
 }
 
+type InferUnion<T extends [Parser<any>, Parser<any>, ...Parser<any>[]]> = {
+  [K in keyof T]: T[K] extends Parser<infer U> ? U : never;
+}[number];
+
+function union<T extends [Parser<any>, Parser<any>, ...Parser<any>[]]>(
+  parsers: T
+): Parser<InferUnion<T>> {
+  return new Parser<InferUnion<T>>((context) => {
+    const errors: ParseError[] = [];
+
+    for (let i = 0; i < parsers.length; i++) {
+      const parser = parsers[i];
+
+      if (!(parser instanceof Parser)) {
+        continue;
+      }
+
+      const value = parser.parseFn(context);
+
+      if (value.ok) {
+        return value;
+      }
+
+      errors.push(...value.errors);
+    }
+
+    return {
+      ok: false,
+      errors,
+    };
+  });
+}
+
 type WithOptionalProps<T> = {
   [K in keyof T as T[K] extends Parser<any, infer Opt>
     ? Opt extends false
@@ -415,27 +461,34 @@ type WithOptionalProps<T> = {
 
 type Infer<T> = T extends Parser<infer U>
   ? U extends Array<infer I>
-    ? [] extends U
-      ? Array<
-          I extends ParsedObject<infer O>
-            ? { [K in keyof WithOptionalProps<O>]: WithOptionalProps<O>[K] }
-            : I
-        >
-      : { [K in keyof U]: Infer<U[K]> }
+    ? // If typescript knows that an array has an item, then it must be a tuple. If so, we just return
+      // the type as-is. Otherwise, e.g. [string, boolean] will become Array<string, boolean>
+      U extends { 0: any }
+      ? U
+      : I[]
+    : // This checks if U accepts "arbitrary" keys, meaning it should be a record. A more robust
+    // solution would probably be to forward this information as a generic like optionals.
+    { $$recordCheck: any } extends U
+    ? U extends Record<string, infer E>
+      ? Record<string, Infer<Parser<E>>>
+      : never
     : U extends ParsedObject<infer O>
-    ? { [K in keyof WithOptionalProps<O>]: WithOptionalProps<O>[K] }
+    ? { [P in keyof WithOptionalProps<O>]: WithOptionalProps<O>[P] }
     : U
-  : T;
+  : never;
 
 export {
   array,
   boolean,
+  lazy,
   literal,
   number,
   object,
   record,
   string,
   tuple,
+  union,
   type Infer,
   type ParseResult,
+  type Parser,
 };
