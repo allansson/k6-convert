@@ -1,7 +1,7 @@
 import { expect, it } from "@jest/globals";
-import { scenario, test } from "src/convert/ast";
-import { toIntermediateAST } from "src/convert/convert";
-import { type Test } from "src/inputs/test/types";
+import { scenario, test } from "~/src/convert/ast";
+import { toIntermediateAST } from "~/src/convert/convert";
+import { type Test } from "~/src/inputs/test/types";
 
 it("should return an empty test when the input is empty", () => {
   const input: Test = {

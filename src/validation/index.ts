@@ -1,1 +1,1 @@
-export * from "src/validation/zoddler";
+export * from "~/src/validation/zoddler";

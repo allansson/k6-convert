@@ -9,7 +9,7 @@ import {
   string,
   tuple,
   type ParseResult,
-} from "src/validation/zoddler";
+} from "~/src/validation/zoddler";
 
 describe("string", () => {
   it("should succeed when input is a string", () => {

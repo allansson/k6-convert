@@ -348,7 +348,7 @@ function array<T>(parser: Parser<T>): Parser<T[]> {
   });
 }
 
-function tuple<E extends [...Parser<unknown>[]]>(...parsers: E) {
+function tuple<E extends [...Array<Parser<unknown>>]>(...parsers: E) {
   return new Parser<{
     [K in keyof E]: E[K] extends Parser<infer U> ? U : never;
   }>((context) => {
@@ -414,13 +414,13 @@ function tuple<E extends [...Parser<unknown>[]]>(...parsers: E) {
 }
 
 type InferUnion<
-  T extends [Parser<unknown>, Parser<unknown>, ...Parser<unknown>[]],
+  T extends [Parser<unknown>, Parser<unknown>, ...Array<Parser<unknown>>],
 > = {
   [K in keyof T]: T[K] extends Parser<infer U> ? U : never;
 }[number];
 
 function union<
-  T extends [Parser<unknown>, Parser<unknown>, ...Parser<unknown>[]],
+  T extends [Parser<unknown>, Parser<unknown>, ...Array<Parser<unknown>>],
 >(parsers: T): Parser<InferUnion<T>> {
   return new Parser<InferUnion<T>>((context) => {
     const errors: ParseError[] = [];

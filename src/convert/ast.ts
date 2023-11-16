@@ -66,6 +66,12 @@ type Statement =
 
 type AstNode = Statement | Expression;
 
+interface DefaultScenario {
+  type: "DefaultScenario";
+  name?: string;
+  statements: Statement[];
+}
+
 interface Scenario {
   type: "Scenario";
   name: string;
@@ -74,6 +80,7 @@ interface Scenario {
 
 interface Test {
   type: "Test";
+  defaultScenario?: DefaultScenario;
   scenarios: Scenario[];
 }
 
@@ -156,9 +163,21 @@ function scenario(name: string, statements: Statement[]): Scenario {
   };
 }
 
-function test(scenarios: Scenario[]): Test {
+function defaultScenario(
+  name: string | undefined,
+  statements: Statement[]
+): DefaultScenario {
+  return {
+    type: "DefaultScenario",
+    name,
+    statements,
+  };
+}
+
+function test(scenarios: Scenario[], defaultScenario?: DefaultScenario): Test {
   return {
     type: "Test",
+    defaultScenario,
     scenarios,
   };
 }
@@ -166,6 +185,7 @@ function test(scenarios: Scenario[]): Test {
 export {
   assign,
   declare,
+  defaultScenario,
   group,
   httpGet,
   identifier,
@@ -177,6 +197,7 @@ export {
   test,
   type AssignStatement,
   type AstNode,
+  type DefaultScenario,
   type Expression,
   type GroupStatement,
   type HttpGetExpression,

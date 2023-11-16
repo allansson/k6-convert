@@ -7,8 +7,8 @@ import {
   log,
   nil,
   string,
-} from "src/convert/ast";
-import { hoistVariables } from "src/processing/variableHoisting";
+} from "~/src/convert/ast";
+import { hoistVariables } from "~/src/processing/variableHoisting";
 
 it("should do nothing when variable is only referenced in the same scope", () => {
   const input = group("root", [

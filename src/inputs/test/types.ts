@@ -9,7 +9,7 @@ import {
   union,
   type Infer,
   type Parser,
-} from "src/validation";
+} from "~/src/validation";
 
 const SleepStepSchema = object({
   type: literal("sleep"),

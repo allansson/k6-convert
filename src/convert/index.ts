@@ -1,7 +1,7 @@
-import { toIntermediateAST } from "src/convert/convert";
-import { fromHAR } from "src/convert/har";
-import type { Test } from "src/inputs/test/types";
-import { exhaustive } from "src/utils";
+import { toIntermediateAST } from "~/src/convert/convert";
+import { fromHAR } from "~/src/convert/har";
+import type { Test } from "~/src/inputs/test/types";
+import { exhaustive } from "~/src/utils";
 
 interface TestFormat {
   type: "test";

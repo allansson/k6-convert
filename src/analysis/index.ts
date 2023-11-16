@@ -4,8 +4,8 @@ import type {
   ScopedStatement,
   ScopedStatementInfo,
   ScopeInfo,
-} from "src/analysis/analysis";
-import { analyzeStatements } from "src/analysis/statements";
+} from "~/src/analysis/analysis";
+import { analyzeStatements } from "~/src/analysis/statements";
 
 function rootContext(statement: ScopedStatement): AnalysisContext {
   const scope: ScopeInfo = {
@@ -62,6 +62,6 @@ export {
   type ScopedStatementInfo,
   type ScopeInfo,
   type StatementInfo,
-} from "src/analysis/analysis";
+} from "~/src/analysis/analysis";
 
 export { analyze };

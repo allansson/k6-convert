@@ -4,8 +4,8 @@ import {
   type ScopeInfo,
   type ScopedStatement,
   type ScopedStatementInfo,
-} from "src/analysis";
-import { declare, group, identifier, log, string } from "src/convert/ast";
+} from "~/src/analysis";
+import { declare, group, identifier, log, string } from "~/src/convert/ast";
 
 function createRootScope(statement: ScopedStatement): ScopeInfo {
   return {

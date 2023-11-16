@@ -1,6 +1,6 @@
 import { expect, it } from "@jest/globals";
-import { group, log, nil, sleep } from "src/convert/ast";
-import { Rewriter, rewrite } from "src/processing/rewrite";
+import { group, log, nil, sleep } from "~/src/convert/ast";
+import { Rewriter, rewrite } from "~/src/processing/rewrite";
 
 it("should insert statement before node in group", () => {
   const target = sleep(1);

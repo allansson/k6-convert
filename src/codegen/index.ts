@@ -1,57 +1,63 @@
 import type * as es from "estree";
-import type { Plugin } from "prettier";
-import * as estreePlugin from "prettier/plugins/estree";
-import { format } from "prettier/standalone";
 
-import type { Test } from "~/src/convert/ast";
+import {
+  defaultExport,
+  functionDeclaration,
+  namedExport,
+  program,
+} from "~/src/codegen/builders/modules";
+import { EmitContext } from "~/src/codegen/context";
+import { format } from "~/src/codegen/formatter";
+import type { DefaultScenario, Scenario, Test } from "~/src/convert/ast";
 
-function createPlugin(program: es.Program): Plugin {
-  return {
-    languages: [
-      {
-        name: "k6-convert",
-        parsers: ["k6-convert"],
-      },
-    ],
-    parsers: {
-      "k6-convert": {
-        locStart(node) {
-          return node.start;
-        },
-        locEnd(node) {
-          return node.end;
-        },
-        parse() {
-          return program;
-        },
-        astFormat: "estree",
-      },
-    },
-  };
+function spaceBetween<Node extends es.Node>(nodes: Node[]): Node[] {
+  const newNodes = [...nodes];
+
+  for (let i = 0; i < newNodes.length - 1; i++) {
+    const node = newNodes[i];
+
+    if (node === null || node === undefined) {
+      continue;
+    }
+
+    newNodes[i] = {
+      ...node,
+      newLine: "after",
+    };
+  }
+
+  return newNodes;
 }
 
-async function emit(_test: Test): Promise<string> {
-  const ast: es.Program = {
-    type: "Program",
-    sourceType: "module",
-    body: [
-      {
-        type: "ExpressionStatement",
-        expression: {
-          type: "Literal",
-          value: "use strict",
-          raw: '"use strict"',
-        },
-        directive: "use strict",
-      },
-    ],
-  };
+function emitNamedScenario(
+  _context: EmitContext,
+  scenario: Scenario
+): es.ExportNamedDeclaration {
+  return namedExport(functionDeclaration(scenario.name, []));
+}
 
-  return await format("i", {
-    filepath: "test.js",
-    parser: "k6-convert",
-    plugins: [createPlugin(ast), estreePlugin],
+function emitDefaultScenario(
+  _context: EmitContext,
+  scenario: DefaultScenario
+): es.ExportDefaultDeclaration {
+  return defaultExport(functionDeclaration(scenario.name, []));
+}
+
+function emit(test: Test): Promise<string> {
+  const context = new EmitContext();
+
+  const defaultScenario = test.defaultScenario
+    ? [emitDefaultScenario(context, test.defaultScenario)]
+    : [];
+
+  const namedScenarios = test.scenarios.map((scenario) => {
+    return emitNamedScenario(context, scenario);
   });
+
+  const scenarios = [...namedScenarios, ...defaultScenario];
+  const ast = program(spaceBetween(scenarios));
+
+  return format(ast);
 }
 
 export { emit };

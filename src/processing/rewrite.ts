@@ -1,5 +1,5 @@
-import type { ScopedStatement } from "src/analysis/analysis";
-import type { Statement } from "src/convert/ast";
+import type { ScopedStatement } from "~/src/analysis/analysis";
+import type { Statement } from "~/src/convert/ast";
 
 interface InsertBefore {
   type: "InsertBefore";

@@ -7,14 +7,14 @@ import {
   type ScopeInfo,
   type ScopedStatement,
   type StatementInfo,
-} from "src/analysis/analysis";
-import { analyzeExpression } from "src/analysis/expressions";
+} from "~/src/analysis/analysis";
+import { analyzeExpression } from "~/src/analysis/expressions";
 import type {
   AssignStatement,
   LogStatement,
   Statement,
   UserVariableDeclaration,
-} from "src/convert/ast";
+} from "~/src/convert/ast";
 
 function toNodeId(path: NodePath): NodeId {
   return "/" + path.join("/");

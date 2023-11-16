@@ -1,5 +1,5 @@
-import { scenario, test, type Scenario, type Test } from "src/convert/ast";
-import type * as Input from "src/inputs/test/types";
+import { scenario, test, type Scenario, type Test } from "~/src/convert/ast";
+import type * as Input from "~/src/inputs/test/types";
 
 function toScenario(input: Input.Scenario): Scenario {
   return scenario(input.name, []);

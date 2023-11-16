@@ -1,0 +1,3 @@
+class EmitContext {}
+
+export { EmitContext };
