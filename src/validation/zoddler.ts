@@ -157,18 +157,18 @@ function boolean() {
   });
 }
 
-function isObject(input: unknown): input is object {
+function isObject(input: unknown): input is Record<string, unknown> {
   return typeof input === "object" && input !== null && !Array.isArray(input);
 }
 
 type ParserObject<T> = { [K in keyof T]: Parser<T[K]> };
 
 type ParsedObject<T extends object> = {
-  [K in keyof T as T[K] extends Parser<any, false>
+  [K in keyof T as T[K] extends Parser<unknown, false>
     ? K
     : never]: T[K] extends Parser<infer U> ? U : never;
 } & {
-  [K in keyof T as T[K] extends Parser<any, true>
+  [K in keyof T as T[K] extends Parser<unknown, true>
     ? K
     : never]?: T[K] extends Parser<infer U> ? U : never;
 };
@@ -192,7 +192,7 @@ function record<T>(parser: Parser<T>) {
 
     for (const key in context.input) {
       const value = parser.parseFn({
-        input: (context.input as any)[key],
+        input: context.input[key],
         path: `${context.path}.${key}`,
       });
 
@@ -217,7 +217,7 @@ function record<T>(parser: Parser<T>) {
   });
 }
 
-function object<T extends ParserObject<any>>(
+function object<T extends ParserObject<unknown>>(
   parsers: T
 ): Parser<ParsedObject<T>> {
   return new Parser((context) => {
@@ -233,7 +233,7 @@ function object<T extends ParserObject<any>>(
       };
     }
 
-    const result: any = {};
+    const result: Record<string, unknown> = {};
 
     const errors: ParseError[] = [];
 
@@ -258,7 +258,7 @@ function object<T extends ParserObject<any>>(
       }
 
       const value = parser.parseFn({
-        input: (context.input as any)[key],
+        input: context.input[key],
         path,
       });
 
@@ -278,7 +278,7 @@ function object<T extends ParserObject<any>>(
 
     return {
       ok: true,
-      value: result,
+      value: result as ParsedObject<T>,
     };
   });
 }
@@ -348,7 +348,7 @@ function array<T>(parser: Parser<T>): Parser<T[]> {
   });
 }
 
-function tuple<E extends [...Parser<any>[]]>(...parsers: E) {
+function tuple<E extends [...Parser<unknown>[]]>(...parsers: E) {
   return new Parser<{
     [K in keyof E]: E[K] extends Parser<infer U> ? U : never;
   }>((context) => {
@@ -364,8 +364,7 @@ function tuple<E extends [...Parser<any>[]]>(...parsers: E) {
       };
     }
 
-    const result: { [K in keyof E]: E[K] extends Parser<infer U> ? U : never } =
-      [] as any;
+    const result: unknown[] = [];
     const errors: ParseError[] = [];
 
     for (let i = 0; i < parsers.length; i++) {
@@ -407,18 +406,22 @@ function tuple<E extends [...Parser<any>[]]>(...parsers: E) {
 
     return {
       ok: true,
-      value: result,
+      value: result as {
+        [K in keyof E]: E[K] extends Parser<infer U> ? U : never;
+      },
     };
   });
 }
 
-type InferUnion<T extends [Parser<any>, Parser<any>, ...Parser<any>[]]> = {
+type InferUnion<
+  T extends [Parser<unknown>, Parser<unknown>, ...Parser<unknown>[]],
+> = {
   [K in keyof T]: T[K] extends Parser<infer U> ? U : never;
 }[number];
 
-function union<T extends [Parser<any>, Parser<any>, ...Parser<any>[]]>(
-  parsers: T
-): Parser<InferUnion<T>> {
+function union<
+  T extends [Parser<unknown>, Parser<unknown>, ...Parser<unknown>[]],
+>(parsers: T): Parser<InferUnion<T>> {
   return new Parser<InferUnion<T>>((context) => {
     const errors: ParseError[] = [];
 
@@ -432,7 +435,7 @@ function union<T extends [Parser<any>, Parser<any>, ...Parser<any>[]]>(
       const value = parser.parseFn(context);
 
       if (value.ok) {
-        return value;
+        return value as ParseResult<InferUnion<T>>;
       }
 
       errors.push(...value.errors);
@@ -446,13 +449,13 @@ function union<T extends [Parser<any>, Parser<any>, ...Parser<any>[]]>(
 }
 
 type WithOptionalProps<T> = {
-  [K in keyof T as T[K] extends Parser<any, infer Opt>
+  [K in keyof T as T[K] extends Parser<unknown, infer Opt>
     ? Opt extends false
       ? K
       : never
     : never]: Infer<T[K]>;
 } & {
-  [K in keyof T as T[K] extends Parser<any, infer Opt>
+  [K in keyof T as T[K] extends Parser<unknown, infer Opt>
     ? Opt extends true
       ? K
       : never
@@ -463,12 +466,12 @@ type Infer<T> = T extends Parser<infer U>
   ? U extends Array<infer I>
     ? // If typescript knows that an array has an item, then it must be a tuple. If so, we just return
       // the type as-is. Otherwise, e.g. [string, boolean] will become Array<string, boolean>
-      U extends { 0: any }
+      U extends { 0: unknown }
       ? U
       : I[]
     : // This checks if U accepts "arbitrary" keys, meaning it should be a record. A more robust
     // solution would probably be to forward this information as a generic like optionals.
-    { $$recordCheck: any } extends U
+    { $$recordCheck: unknown } extends U
     ? U extends Record<string, infer E>
       ? Record<string, Infer<Parser<E>>>
       : never

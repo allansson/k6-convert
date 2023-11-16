@@ -30,7 +30,7 @@ function createPlugin(program: es.Program): Plugin {
   };
 }
 
-async function emit(test: Test): Promise<string> {
+async function emit(_test: Test): Promise<string> {
   const ast: es.Program = {
     type: "Program",
     sourceType: "module",

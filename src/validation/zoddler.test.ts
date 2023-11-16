@@ -85,7 +85,7 @@ describe("literal", () => {
 
 describe("object", () => {
   it("should parse the empty object", () => {
-    const result = object({}).parse({}) satisfies ParseResult<{}>;
+    const result = object({}).parse({}) satisfies ParseResult<EmptyObject>;
 
     expect(result.ok && result.value).toEqual({});
   });

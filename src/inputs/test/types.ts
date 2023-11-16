@@ -16,16 +16,16 @@ const SleepStepSchema = object({
   duration: number(),
 });
 
-export type SleepStep = Infer<typeof SleepStepSchema>;
+type SleepStep = Infer<typeof SleepStepSchema>;
 
 const LogStepSchema = object({
   type: literal("log"),
   message: string(),
 });
 
-export type LogStep = Infer<typeof LogStepSchema>;
+type LogStep = Infer<typeof LogStepSchema>;
 
-export interface GroupStep {
+interface GroupStep {
   type: "group";
   name: string;
   steps: Step[];
@@ -37,7 +37,7 @@ const GroupStepSchema = object({
   steps: lazy(() => array(StepSchema)),
 });
 
-export type Step = SleepStep | LogStep | GroupStep;
+type Step = SleepStep | LogStep | GroupStep;
 
 const StepSchema: Parser<Step> = union([
   SleepStepSchema,
@@ -50,11 +50,20 @@ const ScenarioSchema = object({
   steps: array(StepSchema),
 });
 
-export type Scenario = Infer<typeof ScenarioSchema>;
+type Scenario = Infer<typeof ScenarioSchema>;
 
 const TestSchema = object({
   defaultScenario: ScenarioSchema.optional(),
   scenarios: record(ScenarioSchema),
 });
 
-export type Test = Infer<typeof TestSchema>;
+type Test = Infer<typeof TestSchema>;
+
+export {
+  type GroupStep,
+  type LogStep,
+  type Scenario,
+  type SleepStep,
+  type Step,
+  type Test,
+};

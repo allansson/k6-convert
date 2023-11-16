@@ -1,8 +1,8 @@
-export function exhaustive<T>(value: never): T {
+function exhaustive<T>(value: never): T {
   return value;
 }
 
-export function groupBy<T, K extends string>(
+function groupBy<T, K extends string>(
   items: T[],
   key: (item: T) => K
 ): Record<K, T[]> {
@@ -15,7 +15,7 @@ export function groupBy<T, K extends string>(
   );
 }
 
-export function* reverse<T>(array: T[]): Generator<T> {
+function* reverse<T>(array: T[]): Generator<T> {
   for (let i = array.length - 1; i >= 0; i--) {
     const element = array[i];
 
@@ -27,7 +27,7 @@ export function* reverse<T>(array: T[]): Generator<T> {
   }
 }
 
-export class Chain<T> {
+class Chain<T> {
   private value: T;
 
   constructor(value: T) {
@@ -48,3 +48,5 @@ export class Chain<T> {
     return this.value;
   }
 }
+
+export { Chain, exhaustive, groupBy, reverse };

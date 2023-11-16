@@ -1,8 +1,10 @@
-import type { NodeId, NodePath, ScopeInfo } from "src/analysis/analysis";
 import {
   report,
   withIndex,
   type AnalysisContext,
+  type NodeId,
+  type NodePath,
+  type ScopeInfo,
   type ScopedStatement,
   type StatementInfo,
 } from "src/analysis/analysis";
