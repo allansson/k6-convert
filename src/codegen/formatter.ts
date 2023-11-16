@@ -1,32 +1,36 @@
 import type * as es from "estree";
-import type { AstPath, Plugin, Printer } from "prettier";
+import type { AstPath, Plugin, Printer, SupportOption } from "prettier";
 import { builders } from "prettier/doc";
 import * as estreePlugin from "prettier/plugins/estree";
 import { format as formatWithPrettier } from "prettier/standalone";
 
 const { hardline } = builders;
+const estree = estreePlugin.printers.estree;
 
 declare module "prettier/plugins/estree" {
   const printers: {
     estree: Printer<es.Node>;
   };
+
+  const defaultOptions: Record<string, unknown>;
+  const options: Record<string, SupportOption>;
 }
 
 function createPlugin(program: es.Program): Plugin {
   return {
     languages: [
       {
-        name: "k6-convert",
-        parsers: ["k6-convert"],
+        name: "estree",
+        parsers: ["estree"],
       },
     ],
     parsers: {
-      "k6-convert": {
-        locStart(node) {
-          return node.start;
+      estree: {
+        locStart() {
+          return 0;
         },
-        locEnd(node) {
-          return node.end;
+        locEnd() {
+          return 0;
         },
         parse() {
           return program;
@@ -37,7 +41,7 @@ function createPlugin(program: es.Program): Plugin {
     printers: {
       estree: {
         print(path: AstPath<es.Node>, options, print) {
-          const doc = estreePlugin.printers.estree.print(path, options, print);
+          const doc = estree.print(path, options, print);
           const node = path.getNode();
 
           if (node?.newLine === "before") {
@@ -56,13 +60,15 @@ function createPlugin(program: es.Program): Plugin {
         },
       },
     },
+    defaultOptions: estreePlugin.defaultOptions,
+    options: estreePlugin.options,
   };
 }
 
 async function format(ast: es.Program): Promise<string> {
   return await formatWithPrettier("i", {
     filepath: "test.js",
-    parser: "k6-convert",
+    parser: "estree",
     plugins: [createPlugin(ast)],
   });
 }

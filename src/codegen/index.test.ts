@@ -1,14 +1,25 @@
 import { expect, it } from "@jest/globals";
 import dedent from "dedent";
 import { emit } from "~/src/codegen";
-import { defaultScenario, scenario, test, type Test } from "~/src/convert/ast";
+import {
+  defaultScenario,
+  group,
+  scenario,
+  sleep,
+  test,
+  type Test,
+} from "~/src/convert/ast";
 
 function runEmit(input: Test): Promise<string> {
-  return emit(input).then(dedent);
+  return emit(input).then((result) => result.trimEnd());
 }
 
 it("should emit an empty program when there are no scenarios", async () => {
-  expect(await runEmit(test([]))).toEqual(``);
+  const expected = ``;
+
+  const actual = await runEmit(test([]));
+
+  expect(actual).toEqual(expected);
 });
 
 it("should emit a program with an unnamed default scenario", async () => {
@@ -16,10 +27,11 @@ it("should emit a program with an unnamed default scenario", async () => {
 
   const expected = dedent`
     export default function () {}
-
   `;
 
-  expect(await runEmit(input)).toEqual(expected);
+  const actual = await runEmit(input);
+
+  expect(actual).toEqual(expected);
 });
 
 it("should emit a program with a named default scenario", async () => {
@@ -29,7 +41,9 @@ it("should emit a program with a named default scenario", async () => {
     export default function name() {}
   `;
 
-  expect(await runEmit(input)).toEqual(expected);
+  const actual = await runEmit(input);
+
+  expect(actual).toEqual(expected);
 });
 
 it("should emit named exports for each named scenario", async () => {
@@ -41,7 +55,9 @@ it("should emit named exports for each named scenario", async () => {
     export function scenario2() {}
   `;
 
-  expect(await runEmit(input)).toEqual(expected);
+  const actual = await runEmit(input);
+
+  expect(actual).toEqual(expected);
 });
 
 it("should emit both named and default scenarios", async () => {
@@ -58,5 +74,39 @@ it("should emit both named and default scenarios", async () => {
     export default function scenario3() {}
   `;
 
-  expect(await runEmit(input)).toEqual(expected);
+  const actual = await runEmit(input);
+
+  expect(actual).toEqual(expected);
+});
+
+it('should emit an import of "group" and call it when scenario has a group statement', async () => {
+  const input = test([], defaultScenario(undefined, [group("name", [])]));
+
+  const expected = dedent`
+    import { group } from "k6";
+
+    export default function () {
+      group("name", () => {});
+    }
+  `;
+
+  const actual = await runEmit(input);
+
+  expect(actual).toEqual(expected);
+});
+
+it('should emit an import of "sleep" and call it when scenario has a sleep statement', async () => {
+  const input = test([], defaultScenario(undefined, [sleep(4)]));
+
+  const expected = dedent`
+    import { sleep } from "k6";
+
+    export default function () {
+      sleep(4);
+    }
+  `;
+
+  const actual = await runEmit(input);
+
+  expect(actual).toEqual(expected);
 });

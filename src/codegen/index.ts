@@ -2,45 +2,50 @@ import type * as es from "estree";
 
 import {
   defaultExport,
-  functionDeclaration,
+  defaultImport,
+  importDeclaration,
   namedExport,
+  namedImport,
   program,
 } from "~/src/codegen/builders/modules";
-import { EmitContext } from "~/src/codegen/context";
+import { func } from "~/src/codegen/builders/statements";
+import { EmitContext, type Import } from "~/src/codegen/context";
 import { format } from "~/src/codegen/formatter";
+import { spaceAfter, spaceBetween } from "~/src/codegen/spacing";
+import { emitStatement } from "~/src/codegen/statements";
 import type { DefaultScenario, Scenario, Test } from "~/src/convert/ast";
 
-function spaceBetween<Node extends es.Node>(nodes: Node[]): Node[] {
-  const newNodes = [...nodes];
+function emitImport(target: Import): es.ImportDeclaration {
+  const defaultSpecifier =
+    target.default !== undefined ? [defaultImport(target.default)] : [];
+  const namedSpecifiers = [...target.named].map((name) => namedImport(name));
 
-  for (let i = 0; i < newNodes.length - 1; i++) {
-    const node = newNodes[i];
-
-    if (node === null || node === undefined) {
-      continue;
-    }
-
-    newNodes[i] = {
-      ...node,
-      newLine: "after",
-    };
-  }
-
-  return newNodes;
+  return importDeclaration(
+    [...defaultSpecifier, ...namedSpecifiers],
+    target.from
+  );
 }
 
 function emitNamedScenario(
-  _context: EmitContext,
+  context: EmitContext,
   scenario: Scenario
 ): es.ExportNamedDeclaration {
-  return namedExport(functionDeclaration(scenario.name, []));
+  const body = scenario.statements.map((statement) => {
+    return emitStatement(context, statement);
+  });
+
+  return namedExport(func(scenario.name, body));
 }
 
 function emitDefaultScenario(
-  _context: EmitContext,
+  context: EmitContext,
   scenario: DefaultScenario
 ): es.ExportDefaultDeclaration {
-  return defaultExport(functionDeclaration(scenario.name, []));
+  const body = scenario.statements.map((statement) => {
+    return emitStatement(context, statement);
+  });
+
+  return defaultExport(func(scenario.name, body));
 }
 
 function emit(test: Test): Promise<string> {
@@ -54,8 +59,10 @@ function emit(test: Test): Promise<string> {
     return emitNamedScenario(context, scenario);
   });
 
-  const scenarios = [...namedScenarios, ...defaultScenario];
-  const ast = program(spaceBetween(scenarios));
+  const imports = context.getImports().map(emitImport);
+
+  const scenarios = spaceBetween([...namedScenarios, ...defaultScenario]);
+  const ast = program([...spaceAfter(imports), ...scenarios]);
 
   return format(ast);
 }
