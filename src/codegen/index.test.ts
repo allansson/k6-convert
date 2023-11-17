@@ -118,12 +118,16 @@ describe("imports", () => {
 
     const expected = dedent`
       import { sleep } from "k6";
-
+      
       export default function () {
         sleep(4);
+
         sleep(4);
+
         sleep(4);
+
         sleep(4);
+
         sleep(4);
       }
     `;

@@ -4,7 +4,7 @@ import { Rewriter, rewrite } from "~/src/processing/rewrite";
 
 it("should insert statement before node in group", () => {
   const target = sleep(1);
-  const newNode = log(nil());
+  const newNode = log("log", nil());
 
   const tree = group("root", [target]);
 
@@ -17,7 +17,7 @@ it("should insert statement before node in group", () => {
 
 it("should insert statement after node in group", () => {
   const target = sleep(1);
-  const newNode = log(nil());
+  const newNode = log("log", nil());
 
   const tree = group("root", [target]);
 
@@ -30,7 +30,7 @@ it("should insert statement after node in group", () => {
 
 it("should replace statement in group", () => {
   const target = sleep(1);
-  const newNode = log(nil());
+  const newNode = log("log", nil());
 
   const tree = group("root", [target]);
 

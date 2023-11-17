@@ -164,12 +164,16 @@ function isObject(input: unknown): input is Record<string, unknown> {
 type ParserObject<T> = { [K in keyof T]: Parser<T[K]> };
 
 type ParsedObject<T extends object> = {
-  [K in keyof T as T[K] extends Parser<unknown, false>
-    ? K
+  [K in keyof T as T[K] extends Parser<unknown, infer Opt>
+    ? false extends Opt
+      ? K
+      : never
     : never]: T[K] extends Parser<infer U> ? U : never;
 } & {
-  [K in keyof T as T[K] extends Parser<unknown, true>
-    ? K
+  [K in keyof T as T[K] extends Parser<unknown, infer Opt>
+    ? true extends Opt
+      ? K
+      : never
     : never]?: T[K] extends Parser<infer U> ? U : never;
 };
 
@@ -448,35 +452,9 @@ function union<
   });
 }
 
-type WithOptionalProps<T> = {
-  [K in keyof T as T[K] extends Parser<unknown, infer Opt>
-    ? Opt extends false
-      ? K
-      : never
-    : never]: Infer<T[K]>;
-} & {
-  [K in keyof T as T[K] extends Parser<unknown, infer Opt>
-    ? Opt extends true
-      ? K
-      : never
-    : never]?: Infer<T[K]>;
-};
-
 type Infer<T> = T extends Parser<infer U>
-  ? U extends Array<infer I>
-    ? // If typescript knows that an array has an item, then it must be a tuple. If so, we just return
-      // the type as-is. Otherwise, e.g. [string, boolean] will become Array<string, boolean>
-      U extends { 0: unknown }
-      ? U
-      : I[]
-    : // This checks if U accepts "arbitrary" keys, meaning it should be a record. A more robust
-    // solution would probably be to forward this information as a generic like optionals.
-    { $$recordCheck: unknown } extends U
-    ? U extends Record<string, infer E>
-      ? Record<string, Infer<Parser<E>>>
-      : never
-    : U extends ParsedObject<infer O>
-    ? { [P in keyof WithOptionalProps<O>]: WithOptionalProps<O>[P] }
+  ? U extends Record<string, unknown>
+    ? { [P in keyof U]: Infer<Parser<U[P]>> }
     : U
   : never;
 

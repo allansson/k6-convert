@@ -45,6 +45,13 @@ const StepSchema: Parser<Step> = union([
   GroupStepSchema,
 ]);
 
+const DefaultScenarioSchema = object({
+  name: string().optional(),
+  steps: array(StepSchema),
+});
+
+type DefaultScenario = Infer<typeof DefaultScenarioSchema>;
+
 const ScenarioSchema = object({
   name: string(),
   steps: array(StepSchema),
@@ -53,13 +60,14 @@ const ScenarioSchema = object({
 type Scenario = Infer<typeof ScenarioSchema>;
 
 const TestSchema = object({
-  defaultScenario: ScenarioSchema.optional(),
+  defaultScenario: DefaultScenarioSchema.optional(),
   scenarios: record(ScenarioSchema),
 });
 
 type Test = Infer<typeof TestSchema>;
 
 export {
+  type DefaultScenario,
   type GroupStep,
   type LogStep,
   type Scenario,

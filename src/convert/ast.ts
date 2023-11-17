@@ -169,10 +169,13 @@ function scenario(name: string, statements: Statement[]): Scenario {
 
 function defaultScenario(statements: Statement[]): DefaultScenario;
 function defaultScenario(
-  name: string,
+  name: string | undefined,
   statements: Statement[]
 ): DefaultScenario;
-function defaultScenario(name: Statement[] | string, statements?: Statement[]) {
+function defaultScenario(
+  name: Statement[] | string | undefined,
+  statements?: Statement[]
+): DefaultScenario {
   if (Array.isArray(name)) {
     return {
       type: "DefaultScenario",
@@ -184,7 +187,7 @@ function defaultScenario(name: Statement[] | string, statements?: Statement[]) {
   return {
     type: "DefaultScenario",
     name,
-    statements,
+    statements: statements ?? [],
   };
 }
 

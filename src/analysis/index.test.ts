@@ -132,7 +132,11 @@ describe("references", () => {
     const reference1 = identifier("a");
     const reference2 = identifier("a");
 
-    const root = group("root", [declaration, log(reference1), log(reference2)]);
+    const root = group("root", [
+      declaration,
+      log("log", reference1),
+      log("log", reference2),
+    ]);
 
     const analysis = analyze(root);
 
@@ -169,7 +173,7 @@ describe("references", () => {
 
     const reference = identifier("b");
 
-    const root = group("root", [declaration, log(reference)]);
+    const root = group("root", [declaration, log("log", reference)]);
 
     const analysis = analyze(root);
 
@@ -190,8 +194,8 @@ describe("references", () => {
 
     const child = group("child", [
       declaration2,
-      log(reference1),
-      log(reference2),
+      log("log", reference1),
+      log("log", reference2),
     ]);
 
     const root = group("root", [declaration1, child]);
