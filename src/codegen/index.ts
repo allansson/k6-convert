@@ -12,7 +12,7 @@ import { func } from "~/src/codegen/builders/statements";
 import { EmitContext, type Import } from "~/src/codegen/context";
 import { format } from "~/src/codegen/formatter";
 import { spaceAfter, spaceBetween } from "~/src/codegen/spacing";
-import { emitStatement } from "~/src/codegen/statements";
+import { emitBody } from "~/src/codegen/statements";
 import type { DefaultScenario, Scenario, Test } from "~/src/convert/ast";
 
 function emitImport(target: Import): es.ImportDeclaration {
@@ -30,22 +30,18 @@ function emitNamedScenario(
   context: EmitContext,
   scenario: Scenario
 ): es.ExportNamedDeclaration {
-  const body = scenario.statements.map((statement) => {
-    return emitStatement(context, statement);
-  });
-
-  return namedExport(func(scenario.name, body));
+  return namedExport(
+    func(scenario.name, emitBody(context, scenario.statements))
+  );
 }
 
 function emitDefaultScenario(
   context: EmitContext,
   scenario: DefaultScenario
 ): es.ExportDefaultDeclaration {
-  const body = scenario.statements.map((statement) => {
-    return emitStatement(context, statement);
-  });
-
-  return defaultExport(func(scenario.name, body));
+  return defaultExport(
+    func(scenario.name, emitBody(context, scenario.statements))
+  );
 }
 
 function emit(test: Test): Promise<string> {

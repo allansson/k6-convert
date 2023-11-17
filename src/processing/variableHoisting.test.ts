@@ -13,12 +13,12 @@ import { hoistVariables } from "~/src/processing/variableHoisting";
 it("should do nothing when variable is only referenced in the same scope", () => {
   const input = group("root", [
     declare("const", "a", string("")),
-    log(identifier("a")),
+    log("log", identifier("a")),
   ]);
 
   const expected = group("root", [
     declare("const", "a", string("")),
-    log(identifier("a")),
+    log("log", identifier("a")),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -28,13 +28,13 @@ it("should do nothing when variable is referenced in a child scope", () => {
   const input = group("root", [
     declare("const", "a", string("")),
 
-    group("child", [log(identifier("a"))]),
+    group("child", [log("log", identifier("a"))]),
   ]);
 
   const expected = group("root", [
     declare("const", "a", string("")),
 
-    group("child", [log(identifier("a"))]),
+    group("child", [log("log", identifier("a"))]),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -44,13 +44,19 @@ it("it should do nothing when variable is re-declared in child scope and not ref
   const input = group("root", [
     declare("const", "a", string("")),
 
-    group("child", [declare("const", "a", string("")), log(identifier("a"))]),
+    group("child", [
+      declare("const", "a", string("")),
+      log("log", identifier("a")),
+    ]),
   ]);
 
   const expected = group("root", [
     declare("const", "a", string("")),
 
-    group("child", [declare("const", "a", string("")), log(identifier("a"))]),
+    group("child", [
+      declare("const", "a", string("")),
+      log("log", identifier("a")),
+    ]),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -60,7 +66,7 @@ it("should hoist declaration to same scope as the variabled reference", () => {
   const input = group("root", [
     group("child", [declare("const", "a", string(""))]),
 
-    log(identifier("a")),
+    log("log", identifier("a")),
   ]);
 
   const expected = group("root", [
@@ -68,7 +74,7 @@ it("should hoist declaration to same scope as the variabled reference", () => {
 
     group("child", [assign("a", string(""))]),
 
-    log(identifier("a")),
+    log("log", identifier("a")),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -78,7 +84,7 @@ it("it should hoist declaration to a scope so that all references can access it"
   const input = group("root", [
     group("child", [declare("const", "a", string(""))]),
 
-    group("child2", [log(identifier("a"))]),
+    group("child2", [log("log", identifier("a"))]),
   ]);
 
   const expected = group("root", [
@@ -86,7 +92,7 @@ it("it should hoist declaration to a scope so that all references can access it"
 
     group("child", [assign("a", string(""))]),
 
-    group("child2", [log(identifier("a"))]),
+    group("child2", [log("log", identifier("a"))]),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -100,7 +106,7 @@ it("it should insert declaration before the group where it was hoisted from", ()
 
     group("child", [declare("const", "c", string(""))]),
 
-    log(identifier("c")),
+    log("log", identifier("c")),
   ]);
 
   const expected = group("root", [
@@ -112,7 +118,7 @@ it("it should insert declaration before the group where it was hoisted from", ()
 
     group("child", [assign("c", string(""))]),
 
-    log(identifier("c")),
+    log("log", identifier("c")),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -122,7 +128,7 @@ it("it should hoist declaration from nested scopes", () => {
   const input = group("root", [
     group("child", [group("child2", [declare("const", "a", string(""))])]),
 
-    log(identifier("a")),
+    log("log", identifier("a")),
   ]);
 
   const expected = group("root", [
@@ -130,7 +136,7 @@ it("it should hoist declaration from nested scopes", () => {
 
     group("child", [group("child2", [assign("a", string(""))])]),
 
-    log(identifier("a")),
+    log("log", identifier("a")),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);
@@ -140,17 +146,17 @@ it("should hoist re-declared variables to the scope where they are visible to th
   const input = group("root", [
     group("child", [declare("const", "a", string(""))]),
 
-    group("child2", [log(identifier("a"))]),
+    group("child2", [log("log", identifier("a"))]),
 
     group("child3", [
       group("child4", [declare("const", "a", string(""))]),
 
-      group("child5", [log(identifier("a"))]),
+      group("child5", [log("log", identifier("a"))]),
     ]),
 
     group("child6", [declare("const", "b", string(""))]),
 
-    log(identifier("b")),
+    log("log", identifier("b")),
   ]);
 
   const expected = group("root", [
@@ -158,21 +164,21 @@ it("should hoist re-declared variables to the scope where they are visible to th
 
     group("child", [assign("a", string(""))]),
 
-    group("child2", [log(identifier("a"))]),
+    group("child2", [log("log", identifier("a"))]),
 
     group("child3", [
       declare("let", "a", nil()),
 
       group("child4", [assign("a", string(""))]),
 
-      group("child5", [log(identifier("a"))]),
+      group("child5", [log("log", identifier("a"))]),
     ]),
 
     declare("let", "b", nil()),
 
     group("child6", [assign("b", string(""))]),
 
-    log(identifier("b")),
+    log("log", identifier("b")),
   ]);
 
   expect(hoistVariables(input)).toEqual(expected);

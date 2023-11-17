@@ -47,8 +47,11 @@ interface AssignStatement {
   expression: Expression;
 }
 
+type LogLevel = "log";
+
 interface LogStatement {
   type: "LogStatement";
+  level: LogLevel;
   expression: Expression;
 }
 
@@ -148,9 +151,10 @@ function sleep(seconds: number): SleepStatement {
   };
 }
 
-function log(expression: Expression): LogStatement {
+function log(level: LogLevel, expression: Expression): LogStatement {
   return {
     type: "LogStatement",
+    level,
     expression,
   };
 }
@@ -163,10 +167,20 @@ function scenario(name: string, statements: Statement[]): Scenario {
   };
 }
 
+function defaultScenario(statements: Statement[]): DefaultScenario;
 function defaultScenario(
-  name: string | undefined,
+  name: string,
   statements: Statement[]
-): DefaultScenario {
+): DefaultScenario;
+function defaultScenario(name: Statement[] | string, statements?: Statement[]) {
+  if (Array.isArray(name)) {
+    return {
+      type: "DefaultScenario",
+      name: undefined,
+      statements: name,
+    };
+  }
+
   return {
     type: "DefaultScenario",
     name,
@@ -174,7 +188,20 @@ function defaultScenario(
   };
 }
 
-function test(scenarios: Scenario[], defaultScenario?: DefaultScenario): Test {
+function test(defaultScenario: DefaultScenario): Test;
+function test(scenarios: Scenario[], defaultScenario?: DefaultScenario): Test;
+function test(
+  scenarios: Scenario[] | DefaultScenario,
+  defaultScenario?: DefaultScenario
+): Test {
+  if (!Array.isArray(scenarios)) {
+    return {
+      type: "Test",
+      defaultScenario: scenarios,
+      scenarios: [],
+    };
+  }
+
   return {
     type: "Test",
     defaultScenario,

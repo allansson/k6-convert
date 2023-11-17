@@ -1,5 +1,15 @@
 import type * as es from "estree";
 
+function normalizeIdentifier(
+  expression: es.Expression | string
+): es.Expression {
+  if (typeof expression === "string") {
+    return identifier(expression);
+  }
+
+  return expression;
+}
+
 function identifier(name: string): es.Identifier {
   return {
     type: "Identifier",
@@ -24,6 +34,30 @@ function literal(value: string | number | boolean | null): es.Literal {
   };
 }
 
+function member(
+  object: es.Expression | string,
+  property: es.Expression | string,
+  ...rest: Array<es.Expression | string>
+): es.MemberExpression {
+  const expression: es.MemberExpression = {
+    type: "MemberExpression",
+    object: normalizeIdentifier(object),
+    property: normalizeIdentifier(property),
+    computed: false,
+    optional: false,
+  };
+
+  return rest.reduce<es.MemberExpression>((object, property) => {
+    return {
+      type: "MemberExpression",
+      object,
+      property: normalizeIdentifier(property),
+      computed: false,
+      optional: false,
+    };
+  }, expression);
+}
+
 function arrow(
   params: es.Pattern[],
   body: es.Statement[] | es.Expression
@@ -38,4 +72,4 @@ function arrow(
   };
 }
 
-export { arrow, call, identifier, literal };
+export { arrow, call, identifier, literal, member };
