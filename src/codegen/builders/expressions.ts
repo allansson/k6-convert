@@ -72,4 +72,8 @@ function arrow(
   };
 }
 
-export { arrow, call, identifier, literal, member };
+function nil(): es.Literal {
+  return literal(null);
+}
+
+export { arrow, call, identifier, literal, member, nil };

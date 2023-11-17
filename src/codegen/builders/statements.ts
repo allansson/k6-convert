@@ -26,4 +26,25 @@ function func(
   };
 }
 
-export { expressionStatement, func };
+function declare(
+  kind: "const" | "let",
+  name: string,
+  expression: es.Expression
+): es.VariableDeclaration {
+  return {
+    type: "VariableDeclaration",
+    declarations: [
+      {
+        type: "VariableDeclarator",
+        id: {
+          type: "Identifier",
+          name,
+        },
+        init: expression,
+      },
+    ],
+    kind,
+  };
+}
+
+export { declare, expressionStatement, func };

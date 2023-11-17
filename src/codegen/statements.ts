@@ -6,15 +6,19 @@ import {
   literal,
   member,
 } from "~/src/codegen/builders/expressions";
-import { expressionStatement } from "~/src/codegen/builders/statements";
+import {
+  declare,
+  expressionStatement,
+} from "~/src/codegen/builders/statements";
 import type { EmitContext } from "~/src/codegen/context";
 import { emitExpression } from "~/src/codegen/expressions";
 import { spaceBetween } from "~/src/codegen/spacing";
-import {
-  type GroupStatement,
-  type LogStatement,
-  type SleepStatement,
-  type Statement,
+import type {
+  GroupStatement,
+  LogStatement,
+  SleepStatement,
+  Statement,
+  UserVariableDeclaration,
 } from "~/src/convert/ast";
 
 function emitBody(
@@ -53,12 +57,26 @@ function emitSleepStatement(
   return expressionStatement(expression);
 }
 
-function emitLogStatement(context: EmitContext, statement: LogStatement) {
+function emitLogStatement(
+  context: EmitContext,
+  statement: LogStatement
+): es.Statement {
   const expression = call(member("console", "log"), [
     emitExpression(context, statement.expression),
   ]);
 
   return expressionStatement(expression);
+}
+
+function emitUserVariableDeclaration(
+  context: EmitContext,
+  statement: UserVariableDeclaration
+): es.Statement {
+  return declare(
+    statement.kind,
+    statement.name,
+    emitExpression(context, statement.expression)
+  );
 }
 
 function emitStatement(
@@ -74,6 +92,9 @@ function emitStatement(
 
     case "LogStatement":
       return emitLogStatement(context, statement);
+
+    case "UserVariableDeclaration":
+      return emitUserVariableDeclaration(context, statement);
 
     default:
       throw new Error(`Statement ${statement.type} not implemented`);

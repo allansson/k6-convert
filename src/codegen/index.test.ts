@@ -2,9 +2,11 @@ import { describe, expect, it } from "@jest/globals";
 import dedent from "dedent";
 import { emit } from "~/src/codegen";
 import {
+  declare,
   defaultScenario,
   group,
   log,
+  nil,
   scenario,
   sleep,
   string,
@@ -251,6 +253,36 @@ describe("log", () => {
     const expected = dedent`
       export default function () {
         console.log("message");
+      }
+    `;
+
+    const actual = await runEmit(input);
+
+    expect(actual).toEqual(expected);
+  });
+});
+
+describe("user variable declarations", () => {
+  it("should emit a const variable declaration", async () => {
+    const input = test(defaultScenario([declare("const", "myVar", nil())]));
+
+    const expected = dedent`
+      export default function () {
+        const myVar = null;
+      }
+    `;
+
+    const actual = await runEmit(input);
+
+    expect(actual).toEqual(expected);
+  });
+
+  it("should emit a let variable declaration", async () => {
+    const input = test(defaultScenario([declare("let", "myVar", nil())]));
+
+    const expected = dedent`
+      export default function () {
+        let myVar = null;
       }
     `;
 
