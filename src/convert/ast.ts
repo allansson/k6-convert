@@ -1,11 +1,13 @@
-interface Variables {
-  [key: string]: string;
+interface SearchParamsExpression {
+  type: SearchParamsExpression;
+  params: {
+    [key: string]: Expression;
+  };
 }
 
 interface HttpGetExpression {
   type: "HttpGetExpression";
-  url: string;
-  variables: Variables;
+  url: Expression;
 }
 
 interface StringLiteralExpression {
@@ -23,6 +25,7 @@ interface NullExpression {
 }
 
 type Expression =
+  | SearchParamsExpression
   | HttpGetExpression
   | IdentifierExpression
   | NullExpression
@@ -60,7 +63,13 @@ interface SleepStatement {
   seconds: number;
 }
 
+interface ExpressionStatement {
+  type: "ExpressionStatement";
+  expression: Expression;
+}
+
 type Statement =
+  | ExpressionStatement
   | GroupStatement
   | UserVariableDeclaration
   | AssignStatement
@@ -87,11 +96,10 @@ interface Test {
   scenarios: Scenario[];
 }
 
-function httpGet(url: string, variables?: Variables): HttpGetExpression {
+function httpGet(url: Expression | string): HttpGetExpression {
   return {
     type: "HttpGetExpression",
-    url,
-    variables: variables ?? {},
+    url: typeof url === "string" ? string(url) : url,
   };
 }
 
@@ -159,6 +167,13 @@ function log(level: LogLevel, expression: Expression): LogStatement {
   };
 }
 
+function expression(expression: Expression): ExpressionStatement {
+  return {
+    type: "ExpressionStatement",
+    expression,
+  };
+}
+
 function scenario(name: string, statements: Statement[]): Scenario {
   return {
     type: "Scenario",
@@ -216,6 +231,7 @@ export {
   assign,
   declare,
   defaultScenario,
+  expression,
   group,
   httpGet,
   identifier,
@@ -229,6 +245,7 @@ export {
   type AstNode,
   type DefaultScenario,
   type Expression,
+  type ExpressionStatement,
   type GroupStatement,
   type HttpGetExpression,
   type IdentifierExpression,

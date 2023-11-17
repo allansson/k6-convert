@@ -2,9 +2,12 @@ import { describe, expect, it } from "@jest/globals";
 import dedent from "dedent";
 import { emit } from "~/src/codegen";
 import {
+  assign,
   declare,
   defaultScenario,
+  expression,
   group,
+  httpGet,
   log,
   nil,
   scenario,
@@ -283,6 +286,42 @@ describe("user variable declarations", () => {
     const expected = dedent`
       export default function () {
         let myVar = null;
+      }
+    `;
+
+    const actual = await runEmit(input);
+
+    expect(actual).toEqual(expected);
+  });
+});
+
+describe("assignments", () => {
+  it("should assign expression to variable", async () => {
+    const input = test(defaultScenario([assign("name", nil())]));
+
+    const expected = dedent`
+      export default function () {
+        name = null;
+      }
+    `;
+
+    const actual = await runEmit(input);
+
+    expect(actual).toEqual(expected);
+  });
+});
+
+describe("http", () => {
+  it("should import default export as http", async () => {
+    const input = test(
+      defaultScenario([expression(httpGet("https://test.k6.io"))])
+    );
+
+    const expected = dedent`
+      import http from "k6/http";
+
+      export default function () {
+        http.get("https://test.k6.io");
       }
     `;
 

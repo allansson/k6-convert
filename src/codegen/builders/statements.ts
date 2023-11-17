@@ -47,4 +47,19 @@ function declare(
   };
 }
 
-export { declare, expressionStatement, func };
+function assign(
+  name: string,
+  expression: es.Expression
+): es.AssignmentExpression {
+  return {
+    type: "AssignmentExpression",
+    operator: "=",
+    left: {
+      type: "Identifier",
+      name,
+    },
+    right: expression,
+  };
+}
+
+export { assign, declare, expressionStatement, func };

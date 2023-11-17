@@ -7,6 +7,7 @@ import {
   member,
 } from "~/src/codegen/builders/expressions";
 import {
+  assign,
   declare,
   expressionStatement,
 } from "~/src/codegen/builders/statements";
@@ -14,6 +15,8 @@ import type { EmitContext } from "~/src/codegen/context";
 import { emitExpression } from "~/src/codegen/expressions";
 import { spaceBetween } from "~/src/codegen/spacing";
 import type {
+  AssignStatement,
+  ExpressionStatement,
   GroupStatement,
   LogStatement,
   SleepStatement,
@@ -68,6 +71,18 @@ function emitLogStatement(
   return expressionStatement(expression);
 }
 
+function emitAssignStatement(
+  context: EmitContext,
+  statement: AssignStatement
+): es.Statement {
+  const expression = assign(
+    statement.name,
+    emitExpression(context, statement.expression)
+  );
+
+  return expressionStatement(expression);
+}
+
 function emitUserVariableDeclaration(
   context: EmitContext,
   statement: UserVariableDeclaration
@@ -79,11 +94,23 @@ function emitUserVariableDeclaration(
   );
 }
 
+function emitExpressionStatement(
+  context: EmitContext,
+  statement: ExpressionStatement
+): es.Statement {
+  const expression = emitExpression(context, statement.expression);
+
+  return expressionStatement(expression);
+}
+
 function emitStatement(
   context: EmitContext,
   statement: Statement
 ): es.Statement {
   switch (statement.type) {
+    case "ExpressionStatement":
+      return emitExpressionStatement(context, statement);
+
     case "GroupStatement":
       return emitGroupStatement(context, statement);
 
@@ -93,11 +120,11 @@ function emitStatement(
     case "LogStatement":
       return emitLogStatement(context, statement);
 
+    case "AssignStatement":
+      return emitAssignStatement(context, statement);
+
     case "UserVariableDeclaration":
       return emitUserVariableDeclaration(context, statement);
-
-    default:
-      throw new Error(`Statement ${statement.type} not implemented`);
   }
 }
 

@@ -20,8 +20,10 @@ class EmitContext {
       this.imports[from] = imports;
     }
 
-    if (imports.default !== undefined) {
-      throw new Error(`Module "${from}" already has a default import.`);
+    if (imports.default !== name) {
+      throw new Error(
+        `Default export of "${from}" has already been imported under a different name.`
+      );
     }
 
     imports.default = name;
