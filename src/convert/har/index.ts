@@ -1,4 +1,4 @@
-import type { Test } from "~/src/convert/test/types";
+import { Test } from "~/src/convert/test/types";
 
 interface HarInput {
   source: "har";

@@ -1,4 +1,4 @@
-function exhaustive<T>(value: never): T {
+function exhaustive(value: never): never {
   return value;
 }
 

@@ -25,17 +25,20 @@ const HttpRequestStepBaseSchema: Parser<HttpRequestStepBase> = object({
 });
 
 interface SafeHttpRequestStep extends HttpRequestStepBase {
+  type: "http-request";
   method: SafeHttpMethod;
 }
 
 const SafeHttpRequestSchema: Parser<SafeHttpRequestStep> = extend(
   HttpRequestStepBaseSchema,
   {
+    type: literal("http-request"),
     method: union([literal("GET"), literal("HEAD"), literal("OPTIONS")]),
   }
 );
 
-interface UnsafeHttpRequestStep {
+interface UnsafeHttpRequestStep extends HttpRequestStepBase {
+  type: "http-request";
   method: UnsafeHttpMethod;
   body?: string;
 }
@@ -43,6 +46,7 @@ interface UnsafeHttpRequestStep {
 const UnsafeHttpRequestSchema: Parser<UnsafeHttpRequestStep> = extend(
   HttpRequestStepBaseSchema,
   {
+    type: literal("http-request"),
     method: union([
       literal("POST"),
       literal("PUT"),

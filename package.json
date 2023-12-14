@@ -58,7 +58,7 @@
     "eslint-plugin-import": "^2.29.0",
     "jest": "^29.7.0",
     "parcel": "^2.10.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "prettier": "^3.1.0"

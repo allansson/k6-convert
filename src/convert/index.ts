@@ -1,14 +1,13 @@
 import { emit } from "~/src/codegen";
-import { toIntermediateAST } from "~/src/convert/convert";
 import { fromHar, type HarInput } from "~/src/convert/har";
 import {
   fromJson,
   JsonEncodedHarInput,
   JsonEncodedTestInput,
 } from "~/src/convert/json";
-import { TestInput } from "~/src/convert/test";
+import { fromTest, TestInput } from "~/src/convert/test";
 import { type Test } from "~/src/convert/test/types";
-import { Chain, exhaustive } from "~/src/utils";
+import { Chain } from "~/src/utils";
 
 type ScriptTargetInput =
   | JsonEncodedHarInput
@@ -27,8 +26,8 @@ type ConvertInput =
 type Script = string;
 
 function convert(input: TestTargetInput): Test;
-function convert(input: ScriptTargetInput): Script;
-function convert(input: ConvertInput) {
+function convert(input: ScriptTargetInput): Promise<Script>;
+function convert(input: ConvertInput): Test | Promise<Script> {
   switch (input.source) {
     case "json-encoded-har":
       return convert(fromJson(input));
@@ -36,22 +35,19 @@ function convert(input: ConvertInput) {
     case "json-encoded-test":
       return convert(fromJson(input));
 
-    case "test":
-      return Chain.from(input.test).map(toIntermediateAST).map(emit).unwrap();
-
     case "har":
       if (input.target === "test") {
         return fromHar(input.har);
       }
 
-      return Chain.from(input.har)
-        .map(fromHar)
-        .map(toIntermediateAST)
-        .map(emit)
-        .unwrap();
+      return convert({
+        source: "test",
+        target: "script",
+        test: fromHar(input.har),
+      });
 
-    default:
-      return exhaustive(input);
+    case "test":
+      return Chain.from(input.test).map(fromTest).map(emit).unwrap();
   }
 }
 

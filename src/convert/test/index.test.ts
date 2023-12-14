@@ -1,6 +1,6 @@
 import { expect, it } from "@jest/globals";
 import { defaultScenario, scenario, test } from "~/src/convert/ast";
-import { toIntermediateAST } from "~/src/convert/convert";
+import { fromTest } from "~/src/convert/test";
 import { type Test } from "~/src/convert/test/types";
 
 it("should return an empty test when the input is empty", () => {
@@ -8,7 +8,7 @@ it("should return an empty test when the input is empty", () => {
     scenarios: {},
   };
 
-  expect(toIntermediateAST(input)).toEqual(test([]));
+  expect(fromTest(input)).toEqual(test([]));
 });
 
 it("should return a test with a default scenario", () => {
@@ -20,9 +20,7 @@ it("should return a test with a default scenario", () => {
     scenarios: {},
   };
 
-  expect(toIntermediateAST(input)).toEqual(
-    test([], defaultScenario("default", []))
-  );
+  expect(fromTest(input)).toEqual(test([], defaultScenario("default", [])));
 });
 
 it("should return a test with a named scenario", () => {
@@ -35,7 +33,7 @@ it("should return a test with a named scenario", () => {
     },
   };
 
-  expect(toIntermediateAST(input)).toEqual(test([scenario("scenario1", [])]));
+  expect(fromTest(input)).toEqual(test([scenario("scenario1", [])]));
 });
 
 it("should return a test with a default and a named scenario", () => {
@@ -52,7 +50,7 @@ it("should return a test with a default and a named scenario", () => {
     },
   };
 
-  expect(toIntermediateAST(input)).toEqual(
+  expect(fromTest(input)).toEqual(
     test([scenario("scenario1", [])], defaultScenario("default", []))
   );
 });
@@ -71,7 +69,7 @@ it("should return a test with multiple named scenarios", () => {
     },
   };
 
-  expect(toIntermediateAST(input)).toEqual(
+  expect(fromTest(input)).toEqual(
     test([scenario("scenario1", []), scenario("scenario2", [])])
   );
 });
