@@ -1,7 +1,13 @@
-import type { Test } from "~/src/inputs/test/types";
+import type { Test } from "~/src/convert/test/types";
 
-function fromHAR(_har: unknown): Test {
+interface HarInput {
+  source: "har";
+  target: "test" | "script";
+  har: unknown;
+}
+
+function fromHar(_har: unknown): Test {
   throw new Error("Not implemented yet");
 }
 
-export { fromHAR };
+export { fromHar, type HarInput };

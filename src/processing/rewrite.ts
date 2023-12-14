@@ -93,6 +93,7 @@ function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
         }),
       };
 
+    case "ExpressionStatement":
     case "UserVariableDeclaration":
     case "AssignStatement":
     case "SleepStatement":

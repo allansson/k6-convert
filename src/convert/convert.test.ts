@@ -1,7 +1,7 @@
 import { expect, it } from "@jest/globals";
-import { scenario, test } from "~/src/convert/ast";
+import { defaultScenario, scenario, test } from "~/src/convert/ast";
 import { toIntermediateAST } from "~/src/convert/convert";
-import { type Test } from "~/src/inputs/test/types";
+import { type Test } from "~/src/convert/test/types";
 
 it("should return an empty test when the input is empty", () => {
   const input: Test = {
@@ -20,7 +20,9 @@ it("should return a test with a default scenario", () => {
     scenarios: {},
   };
 
-  expect(toIntermediateAST(input)).toEqual(test([scenario("default", [])]));
+  expect(toIntermediateAST(input)).toEqual(
+    test([], defaultScenario("default", []))
+  );
 });
 
 it("should return a test with a named scenario", () => {
@@ -51,7 +53,7 @@ it("should return a test with a default and a named scenario", () => {
   };
 
   expect(toIntermediateAST(input)).toEqual(
-    test([scenario("scenario1", []), scenario("default", [])])
+    test([scenario("scenario1", [])], defaultScenario("default", []))
   );
 });
 

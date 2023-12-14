@@ -34,6 +34,23 @@ function literal(value: string | number | boolean | null): es.Literal {
   };
 }
 
+function object(
+  properties: Array<[string, es.Expression]>
+): es.ObjectExpression {
+  return {
+    type: "ObjectExpression",
+    properties: properties.map(([key, value]) => ({
+      type: "Property",
+      key: identifier(key),
+      value,
+      kind: "init",
+      computed: false,
+      method: false,
+      shorthand: false,
+    })),
+  };
+}
+
 function member(
   object: es.Expression | string,
   property: es.Expression | string,
@@ -76,4 +93,4 @@ function nil(): es.Literal {
   return literal(null);
 }
 
-export { arrow, call, identifier, literal, member, nil };
+export { arrow, call, identifier, literal, member, nil, object };

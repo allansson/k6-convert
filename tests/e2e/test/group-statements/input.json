@@ -1,0 +1,17 @@
+{
+  "defaultScenario": {
+    "steps": [
+      {
+        "type": "group",
+        "name": "first",
+        "steps": []
+      },
+      {
+        "type": "group",
+        "name": "second",
+        "steps": []
+      }
+    ]
+  },
+  "scenarios": {}
+}

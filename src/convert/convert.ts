@@ -2,21 +2,23 @@ import {
   defaultScenario,
   scenario,
   test,
-  type DefaultScenario,
-  type Scenario,
-  type Test,
+  type DefaultScenarioDeclaration,
+  type ScenarioDeclaration,
+  type TestDefinition,
 } from "~/src/convert/ast";
-import type * as Input from "~/src/inputs/test/types";
+import type * as Input from "~/src/convert/test/types";
 
-function toDefaultScenario(input: Input.DefaultScenario): DefaultScenario {
+function toDefaultScenario(
+  input: Input.DefaultScenario
+): DefaultScenarioDeclaration {
   return defaultScenario(input.name, []);
 }
 
-function toScenario(input: Input.Scenario): Scenario {
+function toScenario(input: Input.Scenario): ScenarioDeclaration {
   return scenario(input.name, []);
 }
 
-function toIntermediateAST(input: Input.Test): Test {
+function toIntermediateAST(input: Input.Test): TestDefinition {
   const defaultScenario =
     input.defaultScenario && toDefaultScenario(input.defaultScenario);
 

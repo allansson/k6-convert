@@ -1,20 +1,11 @@
 import type * as es from "estree";
-import type { AstPath, Plugin, Printer, SupportOption } from "prettier";
+import type { AstPath, Plugin } from "prettier";
 import { builders } from "prettier/doc";
-import * as estreePlugin from "prettier/plugins/estree";
+import defaultOptions, { options, printers } from "prettier/plugins/estree";
 import { format as formatWithPrettier } from "prettier/standalone";
 
 const { hardline } = builders;
-const estree = estreePlugin.printers.estree;
-
-declare module "prettier/plugins/estree" {
-  const printers: {
-    estree: Printer<es.Node>;
-  };
-
-  const defaultOptions: Record<string, unknown>;
-  const options: Record<string, SupportOption>;
-}
+const estree = printers.estree;
 
 function createPlugin(program: es.Program): Plugin {
   return {
@@ -60,8 +51,8 @@ function createPlugin(program: es.Program): Plugin {
         },
       },
     },
-    defaultOptions: estreePlugin.defaultOptions,
-    options: estreePlugin.options,
+    defaultOptions: defaultOptions as Record<string, unknown>,
+    options: options,
   };
 }
 

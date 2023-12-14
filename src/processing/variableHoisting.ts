@@ -66,7 +66,7 @@ function generateRewrites(analysis: Analysis): RewriteMap {
 }
 
 export function hoistVariables(statement: GroupStatement): Statement {
-  return new Chain(statement)
+  return Chain.from(statement)
     .map(analyze)
     .map(generateRewrites)
     .map(applyRewrites(statement))

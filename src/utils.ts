@@ -28,6 +28,10 @@ function* reverse<T>(array: T[]): Generator<T> {
 }
 
 class Chain<T> {
+  static from<T>(value: T): Chain<T> {
+    return new Chain(value);
+  }
+
   private value: T;
 
   constructor(value: T) {

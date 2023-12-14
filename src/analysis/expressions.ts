@@ -3,11 +3,20 @@ import {
   type AnalysisContext,
   type DeclarationInfo,
 } from "~/src/analysis/analysis";
-import type { Expression, IdentifierExpression } from "~/src/convert/ast";
+import type {
+  Expression,
+  IdentifierExpression,
+  NullExpression,
+  SafeHttpExpression,
+  StringLiteralExpression,
+  UnsafeHttpExpression,
+  UrlEncodedBodyExpression,
+} from "~/src/convert/ast";
+import { exhaustive } from "~/src/utils";
 
 function analyzeIdentifierExpression(
-  expression: IdentifierExpression,
-  context: AnalysisContext
+  context: AnalysisContext,
+  expression: IdentifierExpression
 ): AnalysisContext {
   const declaration = context.frame[expression.name];
 
@@ -43,16 +52,66 @@ function analyzeIdentifierExpression(
   };
 }
 
+function analyzeSafeHttpExpression(
+  context: AnalysisContext,
+  _expression: SafeHttpExpression
+): AnalysisContext {
+  return context;
+}
+
+function analyseUnsafeHttpExpression(
+  context: AnalysisContext,
+  _expression: UnsafeHttpExpression
+): AnalysisContext {
+  return context;
+}
+
+function analyzeStringLiteralExpression(
+  context: AnalysisContext,
+  _expression: StringLiteralExpression
+): AnalysisContext {
+  return context;
+}
+
+function analyzeUrlEncodedBodyExpression(
+  context: AnalysisContext,
+  expression: UrlEncodedBodyExpression
+): AnalysisContext {
+  return Object.values(expression.fields).reduce(analyzeExpression, context);
+}
+
+function analyzeNullExpression(
+  context: AnalysisContext,
+  _expression: NullExpression
+): AnalysisContext {
+  return context;
+}
+
 function analyzeExpression(
-  expression: Expression,
-  context: AnalysisContext
+  context: AnalysisContext,
+  expression: Expression
 ): AnalysisContext {
   switch (expression.type) {
     case "IdentifierExpression":
-      return analyzeIdentifierExpression(expression, context);
+      return analyzeIdentifierExpression(context, expression);
+
+    case "SafeHttpExpression":
+      return analyzeSafeHttpExpression(context, expression);
+
+    case "UnsafeHttpExpression":
+      return analyseUnsafeHttpExpression(context, expression);
+
+    case "StringLiteralExpression":
+      return analyzeStringLiteralExpression(context, expression);
+
+    case "UrlEncodedBodyExpression":
+      return analyzeUrlEncodedBodyExpression(context, expression);
+
+    case "NullExpression":
+      return analyzeNullExpression(context, expression);
 
     default:
-      return context;
+      return exhaustive(expression);
   }
 }
 

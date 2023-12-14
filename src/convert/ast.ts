@@ -1,14 +1,24 @@
-interface SearchParamsExpression {
-  type: SearchParamsExpression;
-  params: {
-    [key: string]: Expression;
-  };
+interface UrlEncodedBodyExpression {
+  type: "UrlEncodedBodyExpression";
+  fields: Record<string, StringLiteralExpression | IdentifierExpression>;
 }
 
-interface HttpGetExpression {
-  type: "HttpGetExpression";
+interface SafeHttpExpression {
+  type: "SafeHttpExpression";
+  method: "GET" | "HEAD" | "OPTIONS";
   url: Expression;
 }
+
+interface UnsafeHttpExpression {
+  type: "UnsafeHttpExpression";
+  method: "POST" | "PUT" | "PATCH" | "DELETE";
+  url: Expression;
+  body: Expression;
+}
+
+type HttpExpression = SafeHttpExpression | UnsafeHttpExpression;
+
+type HttpMethod = HttpExpression["method"];
 
 interface StringLiteralExpression {
   type: "StringLiteralExpression";
@@ -25,8 +35,8 @@ interface NullExpression {
 }
 
 type Expression =
-  | SearchParamsExpression
-  | HttpGetExpression
+  | HttpExpression
+  | UrlEncodedBodyExpression
   | IdentifierExpression
   | NullExpression
   | StringLiteralExpression;
@@ -78,28 +88,56 @@ type Statement =
 
 type AstNode = Statement | Expression;
 
-interface DefaultScenario {
-  type: "DefaultScenario";
+interface ScenarioBase {
   name?: string;
   statements: Statement[];
 }
 
-interface Scenario {
+interface DefaultScenarioDeclaration extends ScenarioBase {
+  type: "DefaultScenario";
+}
+
+interface ScenarioDeclaration extends ScenarioBase {
   type: "Scenario";
   name: string;
-  statements: Statement[];
 }
 
-interface Test {
+interface TestDefinition {
   type: "Test";
-  defaultScenario?: DefaultScenario;
-  scenarios: Scenario[];
+  defaultScenario?: DefaultScenarioDeclaration;
+  scenarios: ScenarioDeclaration[];
 }
 
-function httpGet(url: Expression | string): HttpGetExpression {
+function urlEncodedBody(
+  fields: UrlEncodedBodyExpression["fields"]
+): UrlEncodedBodyExpression {
   return {
-    type: "HttpGetExpression",
+    type: "UrlEncodedBodyExpression",
+    fields,
+  };
+}
+
+function safeHttp(
+  method: SafeHttpExpression["method"],
+  url: Expression | string
+): SafeHttpExpression {
+  return {
+    type: "SafeHttpExpression",
+    method,
     url: typeof url === "string" ? string(url) : url,
+  };
+}
+
+function unsafeHttp(
+  method: UnsafeHttpExpression["method"],
+  url: Expression | string,
+  body: Expression
+): UnsafeHttpExpression {
+  return {
+    type: "UnsafeHttpExpression",
+    method,
+    url: typeof url === "string" ? string(url) : url,
+    body,
   };
 }
 
@@ -174,7 +212,7 @@ function expression(expression: Expression): ExpressionStatement {
   };
 }
 
-function scenario(name: string, statements: Statement[]): Scenario {
+function scenario(name: string, statements: Statement[]): ScenarioDeclaration {
   return {
     type: "Scenario",
     name,
@@ -182,15 +220,15 @@ function scenario(name: string, statements: Statement[]): Scenario {
   };
 }
 
-function defaultScenario(statements: Statement[]): DefaultScenario;
+function defaultScenario(statements: Statement[]): DefaultScenarioDeclaration;
 function defaultScenario(
   name: string | undefined,
   statements: Statement[]
-): DefaultScenario;
+): DefaultScenarioDeclaration;
 function defaultScenario(
   name: Statement[] | string | undefined,
   statements?: Statement[]
-): DefaultScenario {
+): DefaultScenarioDeclaration {
   if (Array.isArray(name)) {
     return {
       type: "DefaultScenario",
@@ -206,12 +244,15 @@ function defaultScenario(
   };
 }
 
-function test(defaultScenario: DefaultScenario): Test;
-function test(scenarios: Scenario[], defaultScenario?: DefaultScenario): Test;
+function test(defaultScenario: DefaultScenarioDeclaration): TestDefinition;
 function test(
-  scenarios: Scenario[] | DefaultScenario,
-  defaultScenario?: DefaultScenario
-): Test {
+  scenarios: ScenarioDeclaration[],
+  defaultScenario?: DefaultScenarioDeclaration
+): TestDefinition;
+function test(
+  scenarios: ScenarioDeclaration[] | DefaultScenarioDeclaration,
+  defaultScenario?: DefaultScenarioDeclaration
+): TestDefinition {
   if (!Array.isArray(scenarios)) {
     return {
       type: "Test",
@@ -233,28 +274,33 @@ export {
   defaultScenario,
   expression,
   group,
-  httpGet,
   identifier,
   log,
   nil,
+  safeHttp,
   scenario,
   sleep,
   string,
   test,
+  unsafeHttp,
+  urlEncodedBody,
   type AssignStatement,
   type AstNode,
-  type DefaultScenario,
-  type Expression,
+  type DefaultScenarioDeclaration,
+  type Expression as Expression,
   type ExpressionStatement,
   type GroupStatement,
-  type HttpGetExpression,
+  type HttpMethod,
   type IdentifierExpression,
   type LogStatement,
   type NullExpression,
-  type Scenario,
+  type SafeHttpExpression,
+  type ScenarioDeclaration,
   type SleepStatement,
   type Statement,
   type StringLiteralExpression,
-  type Test,
+  type TestDefinition,
+  type UnsafeHttpExpression,
+  type UrlEncodedBodyExpression,
   type UserVariableDeclaration,
 };

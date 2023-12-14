@@ -15,11 +15,27 @@ interface ParseContext {
 interface ParseOk<T> {
   ok: true;
   value: T;
+  errors: [];
 }
 
 interface ParseFail {
   ok: false;
   errors: ParseError[];
+}
+
+function ok<T>(value: T): ParseOk<T> {
+  return {
+    ok: true,
+    value,
+    errors: [],
+  };
+}
+
+function fail(errors: ParseError[] | ParseError): ParseFail {
+  return {
+    ok: false,
+    errors: Array.isArray(errors) ? errors : [errors],
+  };
 }
 
 type ParseResult<T> = ParseOk<T> | ParseFail;
@@ -46,10 +62,7 @@ class Parser<T, Optional extends boolean = false> {
   optional() {
     return new Parser<T | undefined, true>((context) => {
       if (context.input === undefined) {
-        return {
-          ok: true,
-          value: undefined,
-        };
+        return ok(undefined);
       }
 
       return this.parseFn(context);
@@ -59,10 +72,7 @@ class Parser<T, Optional extends boolean = false> {
   nullable() {
     return new Parser<T | null, Optional>((context) => {
       if (context.input === null) {
-        return {
-          ok: true,
-          value: null,
-        };
+        return ok(null);
       }
 
       return this.parseFn(context);
@@ -97,63 +107,39 @@ function lazy<T, Optional extends boolean>(fn: () => Parser<T, Optional>) {
 function string() {
   return new Parser<string>((context) => {
     if (typeof context.input === "string") {
-      return {
-        ok: true,
-        value: context.input,
-      };
+      return ok(context.input);
     }
 
-    return {
-      ok: false,
-      errors: [
-        {
-          path: context.path,
-          message: "Expected a string",
-        },
-      ],
-    };
+    return fail({
+      path: context.path,
+      message: "Expected a string",
+    });
   });
 }
 
 function number() {
   return new Parser<number>((context) => {
     if (typeof context.input === "number") {
-      return {
-        ok: true,
-        value: context.input,
-      };
+      return ok(context.input);
     }
 
-    return {
-      ok: false,
-      errors: [
-        {
-          path: context.path,
-          message: "Expected a number",
-        },
-      ],
-    };
+    return fail({
+      path: context.path,
+      message: "Expected a number",
+    });
   });
 }
 
 function boolean() {
   return new Parser<boolean>((context) => {
     if (typeof context.input === "boolean") {
-      return {
-        ok: true,
-        value: context.input,
-      };
+      return ok(context.input);
     }
 
-    return {
-      ok: false,
-      errors: [
-        {
-          path: context.path,
-          message: "Expected a boolean",
-        },
-      ],
-    };
+    return fail({
+      path: context.path,
+      message: "Expected a boolean",
+    });
   });
 }
 
@@ -180,15 +166,10 @@ type ParsedObject<T extends object> = {
 function record<T>(parser: Parser<T>) {
   return new Parser<Record<string, T>>((context) => {
     if (!isObject(context.input)) {
-      return {
-        ok: false,
-        errors: [
-          {
-            path: context.path,
-            message: "Expected a record",
-          },
-        ],
-      };
+      return fail({
+        path: context.path,
+        message: "Expected a record",
+      });
     }
 
     const result: Record<string, T> = {};
@@ -208,33 +189,22 @@ function record<T>(parser: Parser<T>) {
     }
 
     if (errors.length > 0) {
-      return {
-        ok: false,
-        errors,
-      };
+      return fail(errors);
     }
 
-    return {
-      ok: true,
-      value: result,
-    };
+    return ok(result);
   });
 }
 
 function object<T extends ParserObject<unknown>>(
   parsers: T
-): Parser<ParsedObject<T>> {
+): Parser<{ [P in keyof ParsedObject<T>]: ParsedObject<T>[P] }> {
   return new Parser((context) => {
     if (!isObject(context.input)) {
-      return {
-        ok: false,
-        errors: [
-          {
-            path: context.path,
-            message: "Expected an object",
-          },
-        ],
-      };
+      return fail({
+        path: context.path,
+        message: "Expected an object",
+      });
     }
 
     const result: Record<string, unknown> = {};
@@ -274,52 +244,58 @@ function object<T extends ParserObject<unknown>>(
     }
 
     if (errors.length > 0) {
-      return {
-        ok: false,
-        errors,
-      };
+      return fail(errors);
     }
 
-    return {
-      ok: true,
-      value: result as ParsedObject<T>,
-    };
+    return ok(result as ParsedObject<T>);
+  });
+}
+
+type Extension<P extends object, E extends ParserObject<unknown>> = P & {
+  [P in keyof ParsedObject<E>]: ParsedObject<E>[P];
+};
+
+function extend<T extends object, U extends ParserObject<unknown>>(
+  baseSchema: Parser<T>,
+  extension: U
+): Parser<{ [P in keyof Extension<T, U>]: Extension<T, U>[P] }> {
+  const extensionParser = object(extension);
+
+  return new Parser((context) => {
+    const baseResult = baseSchema.parseFn(context);
+    const extensionResult = extensionParser.parseFn(context);
+
+    if (!baseResult.ok || !extensionResult.ok) {
+      return fail([...baseResult.errors, ...extensionResult.errors]);
+    }
+
+    return ok({
+      ...baseResult.value,
+      ...extensionResult.value,
+    });
   });
 }
 
 function literal<T extends string>(value: T) {
   return new Parser<T>((context) => {
     if (context.input === value) {
-      return {
-        ok: true,
-        value,
-      };
+      return ok(value);
     }
 
-    return {
-      ok: false,
-      errors: [
-        {
-          path: context.path,
-          message: `Expected "${value}"`,
-        },
-      ],
-    };
+    return fail({
+      path: context.path,
+      message: `Expected "${value}"`,
+    });
   });
 }
 
 function array<T>(parser: Parser<T>): Parser<T[]> {
   return new Parser((context) => {
     if (!Array.isArray(context.input)) {
-      return {
-        ok: false,
-        errors: [
-          {
-            path: context.path,
-            message: "Expected an array",
-          },
-        ],
-      };
+      return fail({
+        path: context.path,
+        message: "Expected an array",
+      });
     }
 
     const result: T[] = [];
@@ -339,16 +315,10 @@ function array<T>(parser: Parser<T>): Parser<T[]> {
     }
 
     if (errors.length > 0) {
-      return {
-        ok: false,
-        errors,
-      };
+      return fail(errors);
     }
 
-    return {
-      ok: true,
-      value: result,
-    };
+    return ok(result);
   });
 }
 
@@ -357,15 +327,10 @@ function tuple<E extends [...Array<Parser<unknown>>]>(...parsers: E) {
     [K in keyof E]: E[K] extends Parser<infer U> ? U : never;
   }>((context) => {
     if (!Array.isArray(context.input)) {
-      return {
-        ok: false,
-        errors: [
-          {
-            path: context.path,
-            message: "Expected an array",
-          },
-        ],
-      };
+      return fail({
+        path: context.path,
+        message: "Expected an array",
+      });
     }
 
     const result: unknown[] = [];
@@ -402,18 +367,14 @@ function tuple<E extends [...Array<Parser<unknown>>]>(...parsers: E) {
     }
 
     if (errors.length > 0) {
-      return {
-        ok: false,
-        errors,
-      };
+      return fail(errors);
     }
 
-    return {
-      ok: true,
-      value: result as {
+    return ok(
+      result as {
         [K in keyof E]: E[K] extends Parser<infer U> ? U : never;
-      },
-    };
+      }
+    );
   });
 }
 
@@ -461,6 +422,7 @@ type Infer<T> = T extends Parser<infer U>
 export {
   array,
   boolean,
+  extend,
   lazy,
   literal,
   number,

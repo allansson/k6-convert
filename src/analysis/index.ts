@@ -39,8 +39,8 @@ function rootContext(statement: ScopedStatement): AnalysisContext {
 
 function analyze(statement: ScopedStatement): Analysis {
   const { statements, scopes, declarations, issues } = analyzeStatements(
-    statement.statements,
-    rootContext(statement)
+    rootContext(statement),
+    statement.statements
   );
 
   return {

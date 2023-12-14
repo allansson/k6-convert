@@ -46,7 +46,7 @@ function generateRewrites(analysis: Analysis): RewriteMap {
 }
 
 export function mergeDeclarations(statement: ScopedStatement): Statement {
-  return new Chain(statement)
+  return Chain.from(statement)
     .map(analyze)
     .map(generateRewrites)
     .map(applyRewrites(statement))

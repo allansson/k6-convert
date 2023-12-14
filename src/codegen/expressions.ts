@@ -1,22 +1,47 @@
 import type * as es from "estree";
-import { call, literal, member } from "~/src/codegen/builders/expressions";
+import {
+  call,
+  literal,
+  member,
+  object,
+} from "~/src/codegen/builders/expressions";
 import type { EmitContext } from "~/src/codegen/context";
 import type {
   Expression,
-  HttpGetExpression,
+  HttpMethod,
+  IdentifierExpression,
   NullExpression,
+  SafeHttpExpression,
   StringLiteralExpression,
+  UrlEncodedBodyExpression,
 } from "~/src/convert/ast";
 
-function emitHttpGetExpression(
+function toHttpFunction(method: HttpMethod): string {
+  return method.toLowerCase();
+}
+
+function emitSafeHttp(
   context: EmitContext,
-  expression: HttpGetExpression
+  expression: SafeHttpExpression
 ): es.Expression {
   context.importDefault("http", "k6/http");
 
   const url = emitExpression(context, expression.url);
 
-  return call(member("http", "get"), [url]);
+  return call(member("http", toHttpFunction(expression.method)), [url]);
+}
+
+function emitUrlEncodedBody(
+  context: EmitContext,
+  expression: UrlEncodedBodyExpression
+): es.Expression {
+  const properties: Array<[string, es.Expression]> = Object.entries(
+    expression.fields
+  ).map(([key, value]) => {
+    return [key, emitExpression(context, value)];
+  });
+
+  return object(properties);
 }
 
 function emitStringLiteral(
@@ -24,6 +49,16 @@ function emitStringLiteral(
   expression: StringLiteralExpression
 ): es.Expression {
   return literal(expression.value);
+}
+
+function emitIdentifier(
+  _context: EmitContext,
+  expression: IdentifierExpression
+): es.Expression {
+  return {
+    type: "Identifier",
+    name: expression.name,
+  };
 }
 
 function emitNull(
@@ -38,14 +73,20 @@ function emitExpression(
   expression: Expression
 ): es.Expression {
   switch (expression.type) {
-    case "HttpGetExpression":
-      return emitHttpGetExpression(context, expression);
+    case "SafeHttpExpression":
+      return emitSafeHttp(context, expression);
 
     case "StringLiteralExpression":
       return emitStringLiteral(context, expression);
 
     case "NullExpression":
       return emitNull(context, expression);
+
+    case "IdentifierExpression":
+      return emitIdentifier(context, expression);
+
+    case "UrlEncodedBodyExpression":
+      return emitUrlEncodedBody(context, expression);
 
     default:
       throw new Error(`Expression type ${expression.type} not implemented.`);
