@@ -1,4 +1,5 @@
 import {
+  Expression,
   expression,
   group,
   log,
@@ -6,17 +7,35 @@ import {
   sleep,
   string,
   unsafeHttp,
+  urlEncodedBody,
   type Statement,
 } from "~/src/convert/ast";
 import type {
   GroupStep,
+  HttpRequestBody,
   HttpRequestStep,
   LogStep,
   SafeHttpRequestStep,
   SleepStep,
   Step,
   UnsafeHttpRequestStep,
+  UrlEncodedBody,
 } from "~/src/convert/test/types";
+
+function fromUrlEncodedBody(body: UrlEncodedBody) {
+  const params = Object.entries(body.params).map(
+    ([key, value]) => [key, string(value)] as const
+  );
+
+  return urlEncodedBody(Object.fromEntries(params));
+}
+
+function fromHttpRequestBody(body: HttpRequestBody): Expression {
+  switch (body.mimeType) {
+    case "application/x-www-form-urlencoded":
+      return fromUrlEncodedBody(body);
+  }
+}
 
 function fromSafeHttpRequestStep(step: SafeHttpRequestStep) {
   return expression(safeHttp(step.method, string(step.url)));
@@ -24,7 +43,7 @@ function fromSafeHttpRequestStep(step: SafeHttpRequestStep) {
 
 function fromUnsafeHttpRequestStep(step: UnsafeHttpRequestStep) {
   return expression(
-    unsafeHttp(step.method, string(step.url), string(step.body ?? ""))
+    unsafeHttp(step.method, string(step.url), fromHttpRequestBody(step.body))
   );
 }
 

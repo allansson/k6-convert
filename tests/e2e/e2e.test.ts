@@ -14,12 +14,18 @@ function getTestDirectories(path: string) {
   }).filter((entry) => entry.isDirectory());
 }
 
+function getTests(paths: string[]) {
+  return paths.flatMap((path) =>
+    getTestDirectories(path).map((entry) => ({
+      input: join(entry.path, entry.name, "input.json"),
+      output: join(entry.path, entry.name, "output.js"),
+      name: `${path} - ${formatName(entry.name)}`,
+    }))
+  );
+}
+
 describe("test", () => {
-  const directories = getTestDirectories("test").map((entry) => ({
-    input: join(entry.path, entry.name, "input.json"),
-    output: join(entry.path, entry.name, "output.js"),
-    name: formatName(entry.name),
-  }));
+  const directories = getTests(["test/scenarios", "test/http"]);
 
   it.each(directories)("$name", async ({ input, output }) => {
     const [inputJSON, outputJS] = await Promise.all([

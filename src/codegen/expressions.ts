@@ -13,6 +13,7 @@ import type {
   NullExpression,
   SafeHttpExpression,
   StringLiteralExpression,
+  UnsafeHttpExpression,
   UrlEncodedBodyExpression,
 } from "~/src/convert/ast";
 
@@ -29,6 +30,18 @@ function emitSafeHttp(
   const url = emitExpression(context, expression.url);
 
   return call(member("http", toHttpFunction(expression.method)), [url]);
+}
+
+function emitUnsafeHttp(
+  context: EmitContext,
+  expression: UnsafeHttpExpression
+) {
+  context.importDefault("http", "k6/http");
+
+  const url = emitExpression(context, expression.url);
+  const body = emitExpression(context, expression.body);
+
+  return call(member("http", toHttpFunction(expression.method)), [url, body]);
 }
 
 function emitUrlEncodedBody(
@@ -76,6 +89,9 @@ function emitExpression(
     case "SafeHttpExpression":
       return emitSafeHttp(context, expression);
 
+    case "UnsafeHttpExpression":
+      return emitUnsafeHttp(context, expression);
+
     case "StringLiteralExpression":
       return emitStringLiteral(context, expression);
 
@@ -87,9 +103,6 @@ function emitExpression(
 
     case "UrlEncodedBodyExpression":
       return emitUrlEncodedBody(context, expression);
-
-    default:
-      throw new Error(`Expression type ${expression.type} not implemented.`);
   }
 }
 

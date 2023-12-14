@@ -61,9 +61,9 @@ function analyzeSafeHttpExpression(
 
 function analyseUnsafeHttpExpression(
   context: AnalysisContext,
-  _expression: UnsafeHttpExpression
+  expression: UnsafeHttpExpression
 ): AnalysisContext {
-  return context;
+  return analyzeExpression(context, expression.body);
 }
 
 function analyzeStringLiteralExpression(

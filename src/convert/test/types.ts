@@ -11,6 +11,20 @@ import {
   type Parser,
 } from "~/src/validation";
 
+interface UrlEncodedBody {
+  mimeType: "application/x-www-form-urlencoded";
+  params: Record<string, string>;
+}
+
+const UrlEncodedBodySchema: Parser<UrlEncodedBody> = object({
+  mimeType: literal("application/x-www-form-urlencoded"),
+  params: record(string()),
+});
+
+type HttpRequestBody = UrlEncodedBody;
+
+const HttpRequesBodySchema: Parser<HttpRequestBody> = UrlEncodedBodySchema;
+
 type SafeHttpMethod = "GET" | "HEAD" | "OPTIONS";
 type UnsafeHttpMethod = "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -40,7 +54,7 @@ const SafeHttpRequestSchema: Parser<SafeHttpRequestStep> = extend(
 interface UnsafeHttpRequestStep extends HttpRequestStepBase {
   type: "http-request";
   method: UnsafeHttpMethod;
-  body?: string;
+  body: HttpRequestBody;
 }
 
 const UnsafeHttpRequestSchema: Parser<UnsafeHttpRequestStep> = extend(
@@ -53,7 +67,7 @@ const UnsafeHttpRequestSchema: Parser<UnsafeHttpRequestStep> = extend(
       literal("DELETE"),
       literal("PATCH"),
     ]),
-    body: string().optional(),
+    body: HttpRequesBodySchema,
   }
 );
 
@@ -140,6 +154,7 @@ export {
   type DefaultScenario,
   type GroupStep,
   type HttpMethod,
+  type HttpRequestBody,
   type HttpRequestStep,
   type LogStep,
   type SafeHttpRequestStep,
@@ -148,4 +163,5 @@ export {
   type Step,
   type Test,
   type UnsafeHttpRequestStep,
+  type UrlEncodedBody,
 };
