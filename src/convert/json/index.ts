@@ -1,7 +1,6 @@
 import { HarInput } from "~/src/convert/har";
 import { TestInput } from "~/src/convert/test";
 import { TestSchema } from "~/src/convert/test/types";
-import { exhaustive } from "~/src/utils";
 
 interface JsonEncodedHarInput {
   source: "json-encoded-har";
@@ -28,7 +27,11 @@ function toTestInput(input: JsonEncodedTestInput): TestInput {
   const result = TestSchema.parse(content);
 
   if (!result.ok) {
-    throw new Error("Input JSON does not appear to be a valid test.");
+    const errors = result.errors
+      .map((error) => `   ${error.path} - ${error.message}`)
+      .join("\n");
+
+    throw new Error(`Failed to parse JSON as a test: \n${errors}`);
   }
 
   return {
@@ -40,16 +43,15 @@ function toTestInput(input: JsonEncodedTestInput): TestInput {
 
 function fromJson(input: JsonEncodedTestInput): TestInput;
 function fromJson(input: JsonEncodedHarInput): HarInput;
-function fromJson(input: JsonEncodedTestInput | JsonEncodedHarInput) {
+function fromJson(
+  input: JsonEncodedTestInput | JsonEncodedHarInput
+): TestInput | HarInput {
   switch (input.source) {
     case "json-encoded-har":
       return toHarInput(input);
 
     case "json-encoded-test":
       return toTestInput(input);
-
-    default:
-      return exhaustive(input);
   }
 }
 

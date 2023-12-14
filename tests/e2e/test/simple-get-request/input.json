@@ -1,0 +1,12 @@
+{
+  "defaultScenario": {
+    "steps": [
+      {
+        "type": "http-request",
+        "method": "GET",
+        "url": "http://localhost:8080/"
+      }
+    ]
+  },
+  "scenarios": {}
+}
