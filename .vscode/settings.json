@@ -1,4 +1,10 @@
 {
+  "json.schemas": [
+    {
+      "fileMatch": ["/input.json"],
+      "url": "./schema/schema.json"
+    }
+  ],
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },

@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "DefaultScenario": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "GroupStep": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "type": "array"
+        },
+        "type": {
+          "const": "group",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "LogStep": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "const": "log",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Record<string,string>": {
+      "type": "object"
+    },
+    "SafeHttpMethod": {
+      "enum": ["GET", "HEAD", "OPTIONS"],
+      "type": "string"
+    },
+    "SafeHttpRequestStep": {
+      "properties": {
+        "method": {
+          "$ref": "#/definitions/SafeHttpMethod"
+        },
+        "type": {
+          "const": "http-request",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Scenario": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "SleepStep": {
+      "properties": {
+        "seconds": {
+          "type": "number"
+        },
+        "type": {
+          "const": "sleep",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Step": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SafeHttpRequestStep"
+        },
+        {
+          "$ref": "#/definitions/UnsafeHttpRequestStep"
+        },
+        {
+          "$ref": "#/definitions/SleepStep"
+        },
+        {
+          "$ref": "#/definitions/LogStep"
+        },
+        {
+          "$ref": "#/definitions/GroupStep"
+        }
+      ]
+    },
+    "UnsafeHttpMethod": {
+      "enum": ["DELETE", "PATCH", "POST", "PUT"],
+      "type": "string"
+    },
+    "UnsafeHttpRequestStep": {
+      "properties": {
+        "body": {
+          "$ref": "#/definitions/UrlEncodedBody"
+        },
+        "method": {
+          "$ref": "#/definitions/UnsafeHttpMethod"
+        },
+        "type": {
+          "const": "http-request",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UrlEncodedBody": {
+      "properties": {
+        "mimeType": {
+          "const": "application/x-www-form-urlencoded",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/Record<string,string>"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "properties": {
+    "defaultScenario": {
+      "$ref": "#/definitions/DefaultScenario"
+    },
+    "scenarios": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Scenario"
+      },
+      "type": "object"
+    }
+  },
+  "type": "object"
+}

@@ -1,6 +1,6 @@
 import { HarInput } from "~/src/convert/har";
 import { TestInput } from "~/src/convert/test";
-import { TestSchema } from "~/src/convert/test/types";
+import { TestSchema } from "~/src/convert/test/schema";
 
 interface JsonEncodedHarInput {
   source: "json-encoded-har";

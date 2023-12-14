@@ -39,6 +39,7 @@
   ],
   "scripts": {
     "build": "parcel build",
+    "build:schema": "typescript-json-schema src/convert/test/types.ts -o schema/schema.json Test",
     "test": "jest"
   },
   "devDependencies": {
@@ -58,7 +59,8 @@
     "eslint-plugin-import": "^2.29.0",
     "jest": "^29.7.0",
     "parcel": "^2.10.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-json-schema": "^0.62.0"
   },
   "dependencies": {
     "prettier": "^3.1.0"
