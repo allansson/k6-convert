@@ -26,6 +26,13 @@ module.exports = {
         argsIgnorePattern: "^_",
       },
     ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        selector: "TSEnumDeclaration",
+        message: "Don't declare enums, use union types instead.",
+      },
+    ],
   },
   settings: {
     "import/ignore": ["prettier/plugins/estree"],
