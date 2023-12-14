@@ -26,6 +26,14 @@ module.exports = {
         argsIgnorePattern: "^_",
       },
     ],
+    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/consistent-type-exports": [
+      "error",
+      {
+        fixMixedExportsWithInlineTypeSpecifier: true,
+      },
+    ],
+    "@typescript-eslint/no-import-type-side-effects": "error",
     "no-restricted-syntax": [
       "error",
       {

@@ -10,7 +10,6 @@
     "noStrictGenericChecks": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
