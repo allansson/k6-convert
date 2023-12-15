@@ -1,7 +1,8 @@
 import type * as es from "estree";
+import { escapePropertyName } from "~/src/codegen/builders/utils";
 
 function normalizeIdentifier(
-  expression: es.Expression | string
+  expression: es.Expression | string,
 ): es.Expression {
   if (typeof expression === "string") {
     return identifier(expression);
@@ -35,19 +36,26 @@ function literal(value: string | number | boolean | null): es.Literal {
 }
 
 function object(
-  properties: Array<[string, es.Expression]>
+  properties: Array<[string, es.Expression]>,
 ): es.ObjectExpression {
   return {
     type: "ObjectExpression",
     properties: properties.map(([key, value]) => ({
       type: "Property",
-      key: identifier(key),
+      key: identifier(escapePropertyName(key)),
       value,
       kind: "init",
       computed: false,
       method: false,
       shorthand: false,
     })),
+  };
+}
+
+function array(elements: es.Expression[]): es.ArrayExpression {
+  return {
+    type: "ArrayExpression",
+    elements,
   };
 }
 
@@ -77,7 +85,7 @@ function member(
 
 function arrow(
   params: es.Pattern[],
-  body: es.Statement[] | es.Expression
+  body: es.Statement[] | es.Expression,
 ): es.ArrowFunctionExpression {
   return {
     type: "ArrowFunctionExpression",
@@ -93,4 +101,4 @@ function nil(): es.Literal {
   return literal(null);
 }
 
-export { arrow, call, identifier, literal, member, nil, object };
+export { array, arrow, call, identifier, literal, member, nil, object };

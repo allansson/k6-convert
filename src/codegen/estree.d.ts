@@ -2,8 +2,10 @@ import * as es from "estree";
 import { Printer, SupportOption } from "prettier";
 
 declare module "estree" {
+  type NewLine = "before" | "after" | "both" | "none";
+
   interface BaseNode {
-    newLine?: "before" | "after" | "both" | "none";
+    newLine?: NewLine;
   }
 }
 

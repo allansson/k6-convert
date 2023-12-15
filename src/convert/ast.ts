@@ -1,3 +1,8 @@
+interface JsonEncodedBodyExpression {
+  type: "JsonEncodedBodyExpression";
+  content: Expression;
+}
+
 interface UrlEncodedBodyExpression {
   type: "UrlEncodedBodyExpression";
   fields: Record<string, StringLiteralExpression | IdentifierExpression>;
@@ -7,6 +12,7 @@ interface SafeHttpExpression {
   type: "SafeHttpExpression";
   method: "GET" | "HEAD" | "OPTIONS";
   url: Expression;
+  headers?: Expression;
 }
 
 interface UnsafeHttpExpression {
@@ -14,11 +20,22 @@ interface UnsafeHttpExpression {
   method: "POST" | "PUT" | "PATCH" | "DELETE";
   url: Expression;
   body: Expression;
+  headers?: Expression;
 }
 
 type HttpExpression = SafeHttpExpression | UnsafeHttpExpression;
 
 type HttpMethod = HttpExpression["method"];
+
+interface NumberLiteralExpression {
+  type: "NumberLiteralExpression";
+  value: number;
+}
+
+interface BooleanLiteralExpression {
+  type: "BooleanLiteralExpression";
+  value: boolean;
+}
 
 interface StringLiteralExpression {
   type: "StringLiteralExpression";
@@ -34,12 +51,27 @@ interface NullExpression {
   type: "NullExpression";
 }
 
+interface ObjectLiteralExpression {
+  type: "ObjectLiteralExpression";
+  fields: Record<string, Expression>;
+}
+
+interface ArrayLiteralExpression {
+  type: "ArrayLiteralExpression";
+  elements: Expression[];
+}
+
 type Expression =
+  | ArrayLiteralExpression
+  | BooleanLiteralExpression
   | HttpExpression
-  | UrlEncodedBodyExpression
   | IdentifierExpression
+  | JsonEncodedBodyExpression
   | NullExpression
-  | StringLiteralExpression;
+  | NumberLiteralExpression
+  | ObjectLiteralExpression
+  | StringLiteralExpression
+  | UrlEncodedBodyExpression;
 
 interface GroupStatement {
   type: "GroupStatement";
@@ -79,12 +111,12 @@ interface ExpressionStatement {
 }
 
 type Statement =
+  | AssignStatement
   | ExpressionStatement
   | GroupStatement
-  | UserVariableDeclaration
-  | AssignStatement
   | LogStatement
-  | SleepStatement;
+  | SleepStatement
+  | UserVariableDeclaration;
 
 type AstNode = Statement | Expression;
 
@@ -108,8 +140,17 @@ interface TestDefinition {
   scenarios: ScenarioDeclaration[];
 }
 
+function jsonEncodedBody(
+  content: Expression | string,
+): JsonEncodedBodyExpression {
+  return {
+    type: "JsonEncodedBodyExpression",
+    content: typeof content === "string" ? string(content) : content,
+  };
+}
+
 function urlEncodedBody(
-  fields: UrlEncodedBodyExpression["fields"]
+  fields: UrlEncodedBodyExpression["fields"],
 ): UrlEncodedBodyExpression {
   return {
     type: "UrlEncodedBodyExpression",
@@ -119,25 +160,43 @@ function urlEncodedBody(
 
 function safeHttp(
   method: SafeHttpExpression["method"],
-  url: Expression | string
+  url: Expression | string,
+  headers?: Expression,
 ): SafeHttpExpression {
   return {
     type: "SafeHttpExpression",
     method,
     url: typeof url === "string" ? string(url) : url,
+    headers,
   };
 }
 
 function unsafeHttp(
   method: UnsafeHttpExpression["method"],
   url: Expression | string,
-  body: Expression
+  body: Expression,
+  headers?: Expression,
 ): UnsafeHttpExpression {
   return {
     type: "UnsafeHttpExpression",
     method,
     url: typeof url === "string" ? string(url) : url,
     body,
+    headers,
+  };
+}
+
+function boolean(value: boolean): BooleanLiteralExpression {
+  return {
+    type: "BooleanLiteralExpression",
+    value,
+  };
+}
+
+function number(value: number): NumberLiteralExpression {
+  return {
+    type: "NumberLiteralExpression",
+    value,
   };
 }
 
@@ -145,6 +204,20 @@ function string(value: string): StringLiteralExpression {
   return {
     type: "StringLiteralExpression",
     value,
+  };
+}
+
+function array(elements: Expression[]): ArrayLiteralExpression {
+  return {
+    type: "ArrayLiteralExpression",
+    elements,
+  };
+}
+
+function object(fields: Record<string, Expression>): ObjectLiteralExpression {
+  return {
+    type: "ObjectLiteralExpression",
+    fields,
   };
 }
 
@@ -172,7 +245,7 @@ function group(name: string, statements: Statement[]): GroupStatement {
 function declare(
   kind: "const" | "let",
   name: string,
-  expression: Expression
+  expression: Expression,
 ): UserVariableDeclaration {
   return {
     type: "UserVariableDeclaration",
@@ -223,11 +296,11 @@ function scenario(name: string, statements: Statement[]): ScenarioDeclaration {
 function defaultScenario(statements: Statement[]): DefaultScenarioDeclaration;
 function defaultScenario(
   name: string | undefined,
-  statements: Statement[]
+  statements: Statement[],
 ): DefaultScenarioDeclaration;
 function defaultScenario(
   name: Statement[] | string | undefined,
-  statements?: Statement[]
+  statements?: Statement[],
 ): DefaultScenarioDeclaration {
   if (Array.isArray(name)) {
     return {
@@ -247,11 +320,11 @@ function defaultScenario(
 function test(defaultScenario: DefaultScenarioDeclaration): TestDefinition;
 function test(
   scenarios: ScenarioDeclaration[],
-  defaultScenario?: DefaultScenarioDeclaration
+  defaultScenario?: DefaultScenarioDeclaration,
 ): TestDefinition;
 function test(
   scenarios: ScenarioDeclaration[] | DefaultScenarioDeclaration,
-  defaultScenario?: DefaultScenarioDeclaration
+  defaultScenario?: DefaultScenarioDeclaration,
 ): TestDefinition {
   if (!Array.isArray(scenarios)) {
     return {
@@ -269,14 +342,19 @@ function test(
 }
 
 export {
+  array,
   assign,
+  boolean,
   declare,
   defaultScenario,
   expression,
   group,
   identifier,
+  jsonEncodedBody,
   log,
   nil,
+  number,
+  object,
   safeHttp,
   scenario,
   sleep,
@@ -284,16 +362,21 @@ export {
   test,
   unsafeHttp,
   urlEncodedBody,
+  type ArrayLiteralExpression,
   type AssignStatement,
   type AstNode,
+  type BooleanLiteralExpression,
   type DefaultScenarioDeclaration,
-  type Expression as Expression,
+  type Expression,
   type ExpressionStatement,
   type GroupStatement,
   type HttpMethod,
   type IdentifierExpression,
+  type JsonEncodedBodyExpression,
   type LogStatement,
   type NullExpression,
+  type NumberLiteralExpression,
+  type ObjectLiteralExpression,
   type SafeHttpExpression,
   type ScenarioDeclaration,
   type SleepStatement,

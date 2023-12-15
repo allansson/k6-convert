@@ -26,12 +26,20 @@ import {
   type Parser,
 } from "~/src/validation";
 
+const JsonEncodedBodySchema: Parser<HttpRequestBody> = object({
+  mimeType: literal("application/json"),
+  content: string(),
+});
+
 const UrlEncodedBodySchema: Parser<UrlEncodedBody> = object({
   mimeType: literal("application/x-www-form-urlencoded"),
   params: record(string()),
 });
 
-const HttpRequesBodySchema: Parser<HttpRequestBody> = UrlEncodedBodySchema;
+const HttpRequesBodySchema: Parser<HttpRequestBody> = union([
+  UrlEncodedBodySchema,
+  JsonEncodedBodySchema,
+]);
 
 const HttpRequestStepBaseSchema = object({
   url: string(),
@@ -42,7 +50,7 @@ const SafeHttpRequestSchema: Parser<SafeHttpRequestStep> = extend(
   {
     type: literal("http-request"),
     method: union([literal("GET"), literal("HEAD"), literal("OPTIONS")]),
-  }
+  },
 );
 
 const UnsafeHttpRequestSchema: Parser<UnsafeHttpRequestStep> = extend(
@@ -56,7 +64,7 @@ const UnsafeHttpRequestSchema: Parser<UnsafeHttpRequestStep> = extend(
       literal("PATCH"),
     ]),
     body: HttpRequesBodySchema,
-  }
+  },
 );
 
 const HttpRequestStepSchema: Parser<HttpRequestStep> = union([

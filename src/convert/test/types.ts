@@ -1,9 +1,14 @@
+interface JsonEncodedBody {
+  mimeType: "application/json";
+  content: string;
+}
+
 interface UrlEncodedBody {
   mimeType: "application/x-www-form-urlencoded";
   params: Record<string, string>;
 }
 
-type HttpRequestBody = UrlEncodedBody;
+type HttpRequestBody = UrlEncodedBody | JsonEncodedBody;
 
 type SafeHttpMethod = "GET" | "HEAD" | "OPTIONS";
 type UnsafeHttpMethod = "POST" | "PUT" | "PATCH" | "DELETE";
@@ -68,6 +73,7 @@ export type {
   HttpMethod,
   HttpRequestBody,
   HttpRequestStep,
+  JsonEncodedBody,
   LogStep,
   SafeHttpRequestStep,
   Scenario,

@@ -2,10 +2,10 @@ import { emit } from "~/src/codegen";
 import { fromHar, type HarInput } from "~/src/convert/har";
 import {
   fromJson,
-  JsonEncodedHarInput,
-  JsonEncodedTestInput,
+  type JsonEncodedHarInput,
+  type JsonEncodedTestInput,
 } from "~/src/convert/json";
-import { fromTest, TestInput } from "~/src/convert/test";
+import { fromTest, type TestInput } from "~/src/convert/test";
 import { type Test } from "~/src/convert/test/types";
 import { Chain } from "~/src/utils";
 

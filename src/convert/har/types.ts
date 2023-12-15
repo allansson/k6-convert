@@ -1,4 +1,4 @@
-import { Infer, object } from "~/src/validation";
+import { object, type Infer } from "~/src/validation";
 
 const ArchiveSchema = object({
   log: object({

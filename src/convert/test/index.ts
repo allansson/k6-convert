@@ -16,13 +16,13 @@ interface TestInput {
 }
 
 function fromDefaultScenario(
-  input: Input.DefaultScenario
+  input: Input.DefaultScenario,
 ): DefaultScenarioDeclaration {
-  return defaultScenario(input.name, input.steps.map(fromStep));
+  return defaultScenario(input.name, input.steps.flatMap(fromStep));
 }
 
 function fromScenario(input: Input.Scenario): ScenarioDeclaration {
-  return scenario(input.name, input.steps.map(fromStep));
+  return scenario(input.name, input.steps.flatMap(fromStep));
 }
 
 function fromTest(input: Input.Test): TestDefinition {

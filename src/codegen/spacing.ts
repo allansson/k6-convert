@@ -35,4 +35,11 @@ function spaceAfter<Node extends es.Node>(nodes: Node[]): Node[] {
   ];
 }
 
-export { spaceAfter, spaceBetween };
+function newLine<N extends es.Node>(place: es.NewLine, node: N): N {
+  return {
+    ...node,
+    newLine: place,
+  };
+}
+
+export { newLine, spaceAfter, spaceBetween };

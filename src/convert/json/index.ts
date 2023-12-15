@@ -1,5 +1,5 @@
-import { HarInput } from "~/src/convert/har";
-import { TestInput } from "~/src/convert/test";
+import type { HarInput } from "~/src/convert/har";
+import type { TestInput } from "~/src/convert/test";
 import { TestSchema } from "~/src/convert/test/schema";
 
 interface JsonEncodedHarInput {
@@ -44,7 +44,7 @@ function toTestInput(input: JsonEncodedTestInput): TestInput {
 function fromJson(input: JsonEncodedTestInput): TestInput;
 function fromJson(input: JsonEncodedHarInput): HarInput;
 function fromJson(
-  input: JsonEncodedTestInput | JsonEncodedHarInput
+  input: JsonEncodedTestInput | JsonEncodedHarInput,
 ): TestInput | HarInput {
   switch (input.source) {
     case "json-encoded-har":
