@@ -1,14 +1,19 @@
 import { expect, it } from "@jest/globals";
 import { defaultScenario, scenario, test } from "~/src/convert/ast";
 import { fromTest } from "~/src/convert/test";
-import { type Test } from "~/src/convert/test/types";
+import type {
+  DefaultScenario,
+  HttpRequestStep,
+  JsonEncodedBody,
+  Test,
+} from "~/src/convert/test/types";
 
 it("should return an empty test when the input is empty", () => {
   const input: Test = {
     scenarios: {},
   };
 
-  expect(fromTest(input)).toEqual(test([]));
+  expect(fromTest(input).unsafeUnwrap()).toEqual(test([]));
 });
 
 it("should return a test with a default scenario", () => {
@@ -20,7 +25,9 @@ it("should return a test with a default scenario", () => {
     scenarios: {},
   };
 
-  expect(fromTest(input)).toEqual(test([], defaultScenario("default", [])));
+  expect(fromTest(input).unsafeUnwrap()).toEqual(
+    test([], defaultScenario("default", [])),
+  );
 });
 
 it("should return a test with a named scenario", () => {
@@ -33,7 +40,9 @@ it("should return a test with a named scenario", () => {
     },
   };
 
-  expect(fromTest(input)).toEqual(test([scenario("scenario1", [])]));
+  expect(fromTest(input).unsafeUnwrap()).toEqual(
+    test([scenario("scenario1", [])]),
+  );
 });
 
 it("should return a test with a default and a named scenario", () => {
@@ -50,8 +59,8 @@ it("should return a test with a default and a named scenario", () => {
     },
   };
 
-  expect(fromTest(input)).toEqual(
-    test([scenario("scenario1", [])], defaultScenario("default", []))
+  expect(fromTest(input).unsafeUnwrap()).toEqual(
+    test([scenario("scenario1", [])], defaultScenario("default", [])),
   );
 });
 
@@ -69,7 +78,40 @@ it("should return a test with multiple named scenarios", () => {
     },
   };
 
-  expect(fromTest(input)).toEqual(
-    test([scenario("scenario1", []), scenario("scenario2", [])])
+  expect(fromTest(input).unsafeUnwrap()).toEqual(
+    test([scenario("scenario1", []), scenario("scenario2", [])]),
   );
+});
+
+it("should report a problem when json body of a request is malformed", () => {
+  const body: JsonEncodedBody = {
+    mimeType: "application/json",
+    content: "{",
+  };
+
+  const step: HttpRequestStep = {
+    type: "http-request",
+    method: "POST",
+    url: "https://example.com",
+    body,
+  };
+
+  const defaultScenario: DefaultScenario = {
+    steps: [step],
+  };
+
+  const input: Test = {
+    defaultScenario,
+    scenarios: {},
+  };
+
+  const result = fromTest(input);
+
+  expect(result.issues).toEqual([
+    {
+      type: "InvalidJsonBody",
+      content: "{",
+      node: body,
+    },
+  ]);
 });

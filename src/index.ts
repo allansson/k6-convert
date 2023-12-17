@@ -1,6 +1,6 @@
 /// <reference types="./codegen/estree.d.ts" />
 
-export { convert } from "~/src/convert";
+export { toScript as convert } from "~/src/convert";
 export {
   type DefaultScenario,
   type GroupStep,

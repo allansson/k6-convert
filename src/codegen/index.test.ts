@@ -19,8 +19,10 @@ import {
   type TestDefinition,
 } from "~/src/convert/ast";
 
-function runEmit(input: TestDefinition): Promise<string> {
-  return emit(input).then((result) => result.trimEnd());
+async function runEmit(input: TestDefinition): Promise<string> {
+  const result = await emit(input);
+
+  return result.map((value) => value.trimEnd()).unsafeUnwrap();
 }
 
 function js(strings: TemplateStringsArray): string {
@@ -84,7 +86,7 @@ describe("scenarios", () => {
   it("should emit both named and default scenarios", async () => {
     const input = test(
       [scenario("scenario1", []), scenario("scenario2", [])],
-      defaultScenario("scenario3", [])
+      defaultScenario("scenario3", []),
     );
 
     const expected = js`
@@ -103,7 +105,7 @@ describe("scenarios", () => {
   it("should add spacing between statements", async () => {
     const input = test(
       [],
-      defaultScenario([sleep(4), sleep(3), sleep(2), sleep(1), sleep(0)])
+      defaultScenario([sleep(4), sleep(3), sleep(2), sleep(1), sleep(0)]),
     );
 
     const expected = js`
@@ -131,7 +133,7 @@ describe("scenarios", () => {
 describe("imports", () => {
   it("should emit import once regardless of the times it is used", async () => {
     const input = test(
-      defaultScenario([sleep(4), sleep(4), sleep(4), sleep(4), sleep(4)])
+      defaultScenario([sleep(4), sleep(4), sleep(4), sleep(4), sleep(4)]),
     );
 
     const expected = js`
@@ -193,7 +195,7 @@ describe("groups", () => {
 
   it("should emit nested groups", async () => {
     const input = test(
-      defaultScenario([group("name", [group("nested", [group("leaf", [])])])])
+      defaultScenario([group("name", [group("nested", [group("leaf", [])])])]),
     );
 
     const expected = js`
@@ -217,7 +219,7 @@ describe("groups", () => {
     const input = test(
       defaultScenario([
         group("name", [sleep(4), sleep(3), sleep(2), sleep(1), sleep(0)]),
-      ])
+      ]),
     );
 
     const expected = js`
@@ -327,7 +329,7 @@ describe("assignments", () => {
 describe("http", () => {
   it("should import default export as http", async () => {
     const input = test(
-      defaultScenario([expression(safeHttp("GET", "https://test.k6.io"))])
+      defaultScenario([expression(safeHttp("GET", "https://test.k6.io"))]),
     );
 
     const expected = js`
@@ -349,7 +351,7 @@ describe("http", () => {
         expression(safeHttp("GET", "https://test.k6.io")),
         expression(safeHttp("HEAD", "https://test.k6.io")),
         expression(safeHttp("OPTIONS", "https://test.k6.io")),
-      ])
+      ]),
     );
 
     const expected = js`
@@ -381,9 +383,9 @@ describe("http", () => {
                 field1: string("value1"),
                 field2: string("value2"),
                 field3: identifier("someVar"),
-              })
+              }),
             ),
-          ])
+          ]),
         );
 
         const expected = js`

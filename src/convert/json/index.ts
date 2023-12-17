@@ -1,6 +1,22 @@
+import { ok, type Result } from "~/src/context";
 import type { HarInput } from "~/src/convert/har";
 import type { TestInput } from "~/src/convert/test";
 import { TestSchema } from "~/src/convert/test/schema";
+
+interface InvalidTestSchemaError {
+  type: "InvalidTestSchemaError";
+  content: string;
+}
+
+interface InvalidJsonError {
+  type: "InvalidJson";
+  content: string;
+  error: unknown;
+}
+
+type JsonDecodeError = InvalidTestSchemaError | InvalidJsonError;
+
+type JsonDecodeResult<Value> = Result<Value, never, JsonDecodeError>;
 
 interface JsonEncodedHarInput {
   source: "json-encoded-har";
@@ -14,38 +30,58 @@ interface JsonEncodedTestInput {
   content: string;
 }
 
-function toHarInput(input: JsonEncodedHarInput): HarInput {
-  return {
-    source: "har",
-    target: input.target,
-    har: JSON.parse(input.content),
-  };
-}
-
-function toTestInput(input: JsonEncodedTestInput): TestInput {
-  const content = JSON.parse(input.content);
-  const result = TestSchema.parse(content);
-
-  if (!result.ok) {
-    const errors = result.errors
-      .map((error) => `   ${error.path} - ${error.message}`)
-      .join("\n");
-
-    throw new Error(`Failed to parse JSON as a test: \n${errors}`);
+function toHarInput(input: JsonEncodedHarInput): JsonDecodeResult<HarInput> {
+  try {
+    return ok({
+      source: "har",
+      target: input.target,
+      har: JSON.parse(input.content),
+    });
+  } catch (error) {
+    return fail({
+      type: "InvalidJson",
+      content: input.content,
+      error,
+    });
   }
-
-  return {
-    source: "test",
-    target: input.target,
-    test: result.value,
-  };
 }
 
-function fromJson(input: JsonEncodedTestInput): TestInput;
-function fromJson(input: JsonEncodedHarInput): HarInput;
+function toTestInput(input: JsonEncodedTestInput): JsonDecodeResult<TestInput> {
+  try {
+    const content = JSON.parse(input.content);
+    const result = TestSchema.parse(content);
+
+    if (!result.ok) {
+      const errors = result.errors
+        .map((error) => `   ${error.path} - ${error.message}`)
+        .join("\n");
+
+      return fail({
+        type: "InvalidTestSchemaError",
+        content: input.content,
+        error: new Error(`Invalid test schema:\n${errors}`),
+      });
+    }
+
+    return ok({
+      source: "test",
+      target: input.target,
+      test: result.value,
+    });
+  } catch (error) {
+    return fail({
+      type: "InvalidJson",
+      content: input.content,
+      error,
+    });
+  }
+}
+
+function fromJson(input: JsonEncodedTestInput): JsonDecodeResult<TestInput>;
+function fromJson(input: JsonEncodedHarInput): JsonDecodeResult<HarInput>;
 function fromJson(
   input: JsonEncodedTestInput | JsonEncodedHarInput,
-): TestInput | HarInput {
+): JsonDecodeResult<TestInput> | JsonDecodeResult<HarInput> {
   switch (input.source) {
     case "json-encoded-har":
       return toHarInput(input);

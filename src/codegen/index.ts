@@ -13,6 +13,7 @@ import { EmitContext, type Import } from "~/src/codegen/context";
 import { format } from "~/src/codegen/formatter";
 import { spaceAfter, spaceBetween } from "~/src/codegen/spacing";
 import { emitBody } from "~/src/codegen/statements";
+import { fromPromise } from "~/src/context";
 import type {
   DefaultScenarioDeclaration,
   ScenarioDeclaration,
@@ -26,29 +27,29 @@ function emitImport(target: Import): es.ImportDeclaration {
 
   return importDeclaration(
     [...defaultSpecifier, ...namedSpecifiers],
-    target.from
+    target.from,
   );
 }
 
 function emitNamedScenario(
   context: EmitContext,
-  scenario: ScenarioDeclaration
+  scenario: ScenarioDeclaration,
 ): es.ExportNamedDeclaration {
   return namedExport(
-    func(scenario.name, emitBody(context, scenario.statements))
+    func(scenario.name, emitBody(context, scenario.statements)),
   );
 }
 
 function emitDefaultScenario(
   context: EmitContext,
-  scenario: DefaultScenarioDeclaration
+  scenario: DefaultScenarioDeclaration,
 ): es.ExportDefaultDeclaration {
   return defaultExport(
-    func(scenario.name, emitBody(context, scenario.statements))
+    func(scenario.name, emitBody(context, scenario.statements)),
   );
 }
 
-function emit(test: TestDefinition): Promise<string> {
+function emit(test: TestDefinition) {
   const context = new EmitContext();
 
   const defaultScenario = test.defaultScenario
@@ -64,7 +65,7 @@ function emit(test: TestDefinition): Promise<string> {
   const scenarios = spaceBetween([...namedScenarios, ...defaultScenario]);
   const ast = program([...spaceAfter(imports), ...scenarios]);
 
-  return format(ast);
+  return fromPromise(format(ast));
 }
 
 export { emit };

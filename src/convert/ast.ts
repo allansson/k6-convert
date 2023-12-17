@@ -1,21 +1,23 @@
-interface JsonEncodedBodyExpression {
+interface AstNode {}
+
+interface JsonEncodedBodyExpression extends AstNode {
   type: "JsonEncodedBodyExpression";
   content: Expression;
 }
 
-interface UrlEncodedBodyExpression {
+interface UrlEncodedBodyExpression extends AstNode {
   type: "UrlEncodedBodyExpression";
   fields: Record<string, StringLiteralExpression | IdentifierExpression>;
 }
 
-interface SafeHttpExpression {
+interface SafeHttpExpression extends AstNode {
   type: "SafeHttpExpression";
   method: "GET" | "HEAD" | "OPTIONS";
   url: Expression;
   headers?: Expression;
 }
 
-interface UnsafeHttpExpression {
+interface UnsafeHttpExpression extends AstNode {
   type: "UnsafeHttpExpression";
   method: "POST" | "PUT" | "PATCH" | "DELETE";
   url: Expression;
@@ -27,36 +29,36 @@ type HttpExpression = SafeHttpExpression | UnsafeHttpExpression;
 
 type HttpMethod = HttpExpression["method"];
 
-interface NumberLiteralExpression {
+interface NumberLiteralExpression extends AstNode {
   type: "NumberLiteralExpression";
   value: number;
 }
 
-interface BooleanLiteralExpression {
+interface BooleanLiteralExpression extends AstNode {
   type: "BooleanLiteralExpression";
   value: boolean;
 }
 
-interface StringLiteralExpression {
+interface StringLiteralExpression extends AstNode {
   type: "StringLiteralExpression";
   value: string;
 }
 
-interface IdentifierExpression {
+interface IdentifierExpression extends AstNode {
   type: "IdentifierExpression";
   name: string;
 }
 
-interface NullExpression {
+interface NullExpression extends AstNode {
   type: "NullExpression";
 }
 
-interface ObjectLiteralExpression {
+interface ObjectLiteralExpression extends AstNode {
   type: "ObjectLiteralExpression";
   fields: Record<string, Expression>;
 }
 
-interface ArrayLiteralExpression {
+interface ArrayLiteralExpression extends AstNode {
   type: "ArrayLiteralExpression";
   elements: Expression[];
 }
@@ -73,20 +75,20 @@ type Expression =
   | StringLiteralExpression
   | UrlEncodedBodyExpression;
 
-interface GroupStatement {
+interface GroupStatement extends AstNode {
   type: "GroupStatement";
   name: string;
   statements: Statement[];
 }
 
-interface UserVariableDeclaration {
+interface UserVariableDeclaration extends AstNode {
   type: "UserVariableDeclaration";
   kind: "const" | "let";
   name: string;
   expression: Expression;
 }
 
-interface AssignStatement {
+interface AssignStatement extends AstNode {
   type: "AssignStatement";
   name: string;
   expression: Expression;
@@ -94,18 +96,18 @@ interface AssignStatement {
 
 type LogLevel = "log";
 
-interface LogStatement {
+interface LogStatement extends AstNode {
   type: "LogStatement";
   level: LogLevel;
   expression: Expression;
 }
 
-interface SleepStatement {
+interface SleepStatement extends AstNode {
   type: "SleepStatement";
   seconds: number;
 }
 
-interface ExpressionStatement {
+interface ExpressionStatement extends AstNode {
   type: "ExpressionStatement";
   expression: Expression;
 }
@@ -118,9 +120,7 @@ type Statement =
   | SleepStatement
   | UserVariableDeclaration;
 
-type AstNode = Statement | Expression;
-
-interface ScenarioBase {
+interface ScenarioBase extends AstNode {
   name?: string;
   statements: Statement[];
 }
@@ -134,7 +134,7 @@ interface ScenarioDeclaration extends ScenarioBase {
   name: string;
 }
 
-interface TestDefinition {
+interface TestDefinition extends AstNode {
   type: "Test";
   defaultScenario?: DefaultScenarioDeclaration;
   scenarios: ScenarioDeclaration[];

@@ -1,4 +1,5 @@
 import { emit } from "~/src/codegen";
+import type { AsyncResult, Result } from "~/src/context";
 import { fromHar, type HarInput } from "~/src/convert/har";
 import {
   fromJson,
@@ -6,18 +7,13 @@ import {
   type JsonEncodedTestInput,
 } from "~/src/convert/json";
 import { fromTest, type TestInput } from "~/src/convert/test";
-import { type Test } from "~/src/convert/test/types";
-import { Chain } from "~/src/utils";
+import type { ConverterIssue } from "~/src/convert/test/context";
+import type { Test } from "~/src/convert/test/types";
+import type { JsonDecodeError } from "~/src/convert/types";
 
-type ScriptTargetInput =
-  | JsonEncodedHarInput
-  | JsonEncodedTestInput
-  | TestInput
-  | HarInput;
+type ToTestInput = HarInput | JsonEncodedHarInput | JsonEncodedTestInput;
 
-type TestTargetInput = JsonEncodedHarInput | HarInput;
-
-type ConvertInput =
+type ToScriptInput =
   | TestInput
   | HarInput
   | JsonEncodedTestInput
@@ -25,30 +21,37 @@ type ConvertInput =
 
 type Script = string;
 
-function convert(input: TestTargetInput): Test;
-function convert(input: ScriptTargetInput): Promise<Script>;
-function convert(input: ConvertInput): Test | Promise<Script> {
+function toTest(
+  input: ToTestInput,
+): Result<Test, ConverterIssue, JsonDecodeError> {
   switch (input.source) {
     case "json-encoded-har":
-      return convert(fromJson(input));
+      return fromJson(input).andThen(toTest);
 
     case "json-encoded-test":
-      return convert(fromJson(input));
+      return fromJson(input).map((input) => input.test);
 
     case "har":
-      if (input.target === "test") {
-        return fromHar(input.har);
-      }
-
-      return convert({
-        source: "test",
-        target: "script",
-        test: fromHar(input.har),
-      });
-
-    case "test":
-      return Chain.from(input.test).map(fromTest).map(emit).unwrap();
+      return fromHar(input.har);
   }
 }
 
-export { convert };
+function toScript(
+  input: ToScriptInput,
+): AsyncResult<Script, ConverterIssue, JsonDecodeError> {
+  switch (input.source) {
+    case "json-encoded-har":
+      return fromJson(input).andThen(toScript);
+
+    case "json-encoded-test":
+      return fromJson(input).andThen(toScript);
+
+    case "har":
+      return fromHar(input.har).andThen((har) => toScript({ ...input, har }));
+
+    case "test":
+      return fromTest(input.test).andThen(emit);
+  }
+}
+
+export { toScript, toTest };

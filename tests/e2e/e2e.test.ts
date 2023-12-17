@@ -20,7 +20,7 @@ function getTests(paths: string[]) {
       input: join(entry.path, entry.name, "input.json"),
       output: join(entry.path, entry.name, "output.js"),
       name: `${path} - ${formatName(entry.name)}`,
-    }))
+    })),
   );
 }
 
@@ -39,6 +39,6 @@ describe("test", () => {
       content: inputJSON,
     });
 
-    expect(result).toEqual(outputJS);
+    expect(result.unsafeUnwrap()).toEqual(outputJS);
   });
 });

@@ -1,3 +1,4 @@
+import { ok } from "~/src/context";
 import {
   array,
   boolean,
@@ -18,6 +19,10 @@ import {
   type Expression,
   type Statement,
 } from "~/src/convert/ast";
+import type {
+  ConverterContext,
+  ConverterResult,
+} from "~/src/convert/test/context";
 import type {
   GroupStep,
   HttpRequestBody,
@@ -81,7 +86,10 @@ function tryParseJson(content: string): Expression | undefined {
   }
 }
 
-function fromJsonEncodedBody(body: JsonEncodedBody): EncodedBody {
+function fromJsonEncodedBody(
+  _context: ConverterContext,
+  body: JsonEncodedBody,
+): ConverterResult<EncodedBody> {
   const headers = object({
     "Content-Type": string("application/json"),
   });
@@ -89,101 +97,139 @@ function fromJsonEncodedBody(body: JsonEncodedBody): EncodedBody {
   const parsedBody = tryParseJson(body.content);
 
   if (parsedBody === undefined) {
-    return {
-      expression: string(body.content),
-      headers,
-    };
+    return ok({ expression: string(body.content), headers }).report({
+      type: "InvalidJsonBody",
+      content: body.content,
+      node: body,
+    });
   }
 
-  return {
+  return ok({
     expression: jsonEncodedBody(parsedBody),
     headers,
-  };
+  });
 }
 
-function fromUrlEncodedBody(body: UrlEncodedBody): EncodedBody {
+function fromUrlEncodedBody(
+  _context: ConverterContext,
+  body: UrlEncodedBody,
+): ConverterResult<EncodedBody> {
   const params = Object.entries(body.params).map(
     ([key, value]) => [key, string(value)] as const,
   );
 
-  return { expression: urlEncodedBody(Object.fromEntries(params)) };
+  return ok({
+    expression: urlEncodedBody(Object.fromEntries(params)),
+  });
 }
 
-function fromHttpRequestBody(body: HttpRequestBody): EncodedBody {
+function fromHttpRequestBody(
+  context: ConverterContext,
+  body: HttpRequestBody,
+): ConverterResult<EncodedBody> {
   switch (body.mimeType) {
     case "application/x-www-form-urlencoded":
-      return fromUrlEncodedBody(body);
+      return fromUrlEncodedBody(context, body);
 
     case "application/json":
-      return fromJsonEncodedBody(body);
+      return fromJsonEncodedBody(context, body);
   }
 }
 
-function fromSafeHttpRequestStep(step: SafeHttpRequestStep) {
-  return expression(safeHttp(step.method, string(step.url)));
+function fromSafeHttpRequestStep(
+  _context: ConverterContext,
+  step: SafeHttpRequestStep,
+): ConverterResult<Statement> {
+  return ok(expression(safeHttp(step.method, string(step.url))));
 }
 
-function fromUnsafeHttpRequestStep(step: UnsafeHttpRequestStep) {
-  const body = fromHttpRequestBody(step.body);
+function fromUnsafeHttpRequestStep(
+  context: ConverterContext,
+  step: UnsafeHttpRequestStep,
+): ConverterResult<Statement[]> {
+  return fromHttpRequestBody(context, step.body).map(
+    ({ expression: body, headers }) => {
+      if (headers !== undefined) {
+        return [
+          declare("const", "body", body),
+          expression(
+            unsafeHttp(
+              step.method,
+              string(step.url),
+              identifier("body"),
+              headers,
+            ),
+          ),
+        ];
+      }
 
-  if (body.headers !== undefined) {
-    return [
-      declare("const", "body", body.expression),
-      expression(
-        unsafeHttp(
-          step.method,
-          string(step.url),
-          identifier("body"),
-          body.headers,
-        ),
-      ),
-    ];
-  }
-
-  return expression(unsafeHttp(step.method, string(step.url), body.expression));
+      return [expression(unsafeHttp(step.method, string(step.url), body))];
+    },
+  );
 }
 
-function fromHttpRequestStep(step: HttpRequestStep) {
+function fromHttpRequestStep(context: ConverterContext, step: HttpRequestStep) {
   switch (step.method) {
     case "GET":
     case "HEAD":
     case "OPTIONS":
-      return fromSafeHttpRequestStep(step);
+      return fromSafeHttpRequestStep(context, step);
 
     case "POST":
     case "PUT":
     case "DELETE":
     case "PATCH":
-      return fromUnsafeHttpRequestStep(step);
+      return fromUnsafeHttpRequestStep(context, step);
   }
 }
 
-function fromGroupStep(step: GroupStep) {
-  return group(step.name, step.steps.flatMap(fromStep));
+function fromGroupStep(context: ConverterContext, step: GroupStep) {
+  return fromSteps(context, step.steps).map((steps) => group(step.name, steps));
 }
 
-function fromSleepStep(step: SleepStep) {
-  return sleep(step.seconds);
+function fromSleepStep(_context: ConverterContext, step: SleepStep) {
+  return ok(sleep(step.seconds));
 }
 
-function fromLogStep(step: LogStep) {
-  return log("log", string(step.message));
+function fromLogStep(_context: ConverterContext, step: LogStep) {
+  return ok(log("log", string(step.message)));
 }
 
-function fromStep(step: Step): Statement[] | Statement {
+function fromStep(context: ConverterContext, step: Step) {
   switch (step.type) {
     case "group":
-      return fromGroupStep(step);
+      return fromGroupStep(context, step);
 
     case "sleep":
-      return fromSleepStep(step);
+      return fromSleepStep(context, step);
 
     case "log":
-      return fromLogStep(step);
+      return fromLogStep(context, step);
 
     case "http-request":
-      return fromHttpRequestStep(step);
+      return fromHttpRequestStep(context, step);
   }
 }
 
-export { fromStep };
+function flatten<T>(array: T | T[]): T[] {
+  return Array.isArray(array) ? array : [array];
+}
+
+function fromSteps(
+  context: ConverterContext,
+  steps: Step[],
+): ConverterResult<Statement[]> {
+  const [first, ...rest] = steps.map((step) =>
+    fromStep(context, step).map((value) => flatten(value)),
+  );
+
+  if (first === undefined) {
+    return ok([]);
+  }
+
+  return rest.reduce((result, next) => {
+    return result.andThen((steps) => next.map((next) => [...steps, ...next]));
+  }, first);
+}
+
+export { fromSteps };

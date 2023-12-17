@@ -1,9 +1,11 @@
-interface JsonEncodedBody {
+interface Node {}
+
+interface JsonEncodedBody extends Node {
   mimeType: "application/json";
   content: string;
 }
 
-interface UrlEncodedBody {
+interface UrlEncodedBody extends Node {
   mimeType: "application/x-www-form-urlencoded";
   params: Record<string, string>;
 }
@@ -15,7 +17,7 @@ type UnsafeHttpMethod = "POST" | "PUT" | "PATCH" | "DELETE";
 
 type HttpMethod = SafeHttpMethod | UnsafeHttpMethod;
 
-interface HttpRequestStepBase {
+interface HttpRequestStepBase extends Node {
   url: string;
 }
 
@@ -32,17 +34,17 @@ interface UnsafeHttpRequestStep extends HttpRequestStepBase {
 
 type HttpRequestStep = SafeHttpRequestStep | UnsafeHttpRequestStep;
 
-interface SleepStep {
+interface SleepStep extends Node {
   type: "sleep";
   seconds: number;
 }
 
-interface LogStep {
+interface LogStep extends Node {
   type: "log";
   message: string;
 }
 
-interface GroupStep {
+interface GroupStep extends Node {
   type: "group";
   name: string;
   steps: Step[];
@@ -50,17 +52,17 @@ interface GroupStep {
 
 type Step = SleepStep | LogStep | HttpRequestStep | GroupStep;
 
-interface DefaultScenario {
+interface DefaultScenario extends Node {
   name?: string;
   steps: Step[];
 }
 
-interface Scenario {
+interface Scenario extends Node {
   name: string;
   steps: Step[];
 }
 
-interface Test {
+interface Test extends Node {
   defaultScenario?: DefaultScenario;
   scenarios: {
     [name: string]: Scenario;
@@ -75,6 +77,7 @@ export type {
   HttpRequestStep,
   JsonEncodedBody,
   LogStep,
+  Node,
   SafeHttpRequestStep,
   Scenario,
   SleepStep,

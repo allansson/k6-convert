@@ -1,5 +1,5 @@
-import * as es from "estree";
-import { Printer, SupportOption } from "prettier";
+import type * as es from "estree";
+import type { Printer, SupportOption } from "prettier";
 
 declare module "estree" {
   type NewLine = "before" | "after" | "both" | "none";

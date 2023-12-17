@@ -1,3 +1,4 @@
+import type { Result } from "~/src/context";
 import type { Test } from "~/src/convert/test/types";
 
 interface HarInput {
@@ -6,7 +7,7 @@ interface HarInput {
   har: unknown;
 }
 
-function fromHar(_har: unknown): Test {
+function fromHar(_har: unknown): Result<Test, never, never> {
   throw new Error("Not implemented yet");
 }
 

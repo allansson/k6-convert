@@ -9,13 +9,13 @@ import {
   type StatementInfo,
 } from "~/src/analysis/analysis";
 import { analyzeExpression } from "~/src/analysis/expressions";
-import {
-  type AssignStatement,
-  type ExpressionStatement,
-  type LogStatement,
-  type SleepStatement,
-  type Statement,
-  type UserVariableDeclaration,
+import type {
+  AssignStatement,
+  ExpressionStatement,
+  LogStatement,
+  SleepStatement,
+  Statement,
+  UserVariableDeclaration,
 } from "~/src/convert/ast";
 import { exhaustive } from "~/src/utils";
 
@@ -25,7 +25,7 @@ function toNodeId(path: NodePath): NodeId {
 
 function analyzeStatements(
   context: AnalysisContext,
-  statements: Statement[]
+  statements: Statement[],
 ): AnalysisContext {
   return statements.reduce((result, statement, index) => {
     const childPath = [...context.self.path, index];
@@ -50,7 +50,7 @@ function analyzeStatements(
 
 function analyzeScopedStatement(
   context: AnalysisContext,
-  statement: ScopedStatement
+  statement: ScopedStatement,
 ): AnalysisContext {
   const scope: ScopeInfo = {
     id: context.self.id,
@@ -63,7 +63,7 @@ function analyzeScopedStatement(
       ...context,
       scope,
     },
-    statement.statements
+    statement.statements,
   );
 
   return {
@@ -79,7 +79,7 @@ function analyzeScopedStatement(
 
 function analyzeDeclaration(
   context: AnalysisContext,
-  statement: UserVariableDeclaration
+  statement: UserVariableDeclaration,
 ): AnalysisContext {
   const isRedclared = statement.name in context.frame;
 
@@ -101,41 +101,43 @@ function analyzeDeclaration(
     declarations: [...context.declarations, info],
   };
 
-  return isRedclared
-    ? report(newContext, {
-        type: "DuplicateVariableDeclaration",
-        others: context.declarations
-          .filter((declaration) => declaration.node.name === statement.name)
-          .map((declaration) => declaration.node),
-        node: statement,
-      })
-    : newContext;
+  if (isRedclared) {
+    return report(newContext, {
+      type: "DuplicateVariableDeclaration",
+      others: context.declarations
+        .filter((declaration) => declaration.node.name === statement.name)
+        .map((declaration) => declaration.node),
+      node: statement,
+    });
+  }
+
+  return newContext;
 }
 
 function analyzeAssignStatement(
   context: AnalysisContext,
-  statement: AssignStatement
+  statement: AssignStatement,
 ): AnalysisContext {
   return analyzeExpression(context, statement.expression);
 }
 
 function analyzeLogStatement(
   context: AnalysisContext,
-  statement: LogStatement
+  statement: LogStatement,
 ): AnalysisContext {
   return analyzeExpression(context, statement.expression);
 }
 
 function analyseExpressionStatement(
   context: AnalysisContext,
-  statement: ExpressionStatement
+  statement: ExpressionStatement,
 ): AnalysisContext {
   return analyzeExpression(context, statement.expression);
 }
 
 function analyzeSleepStatement(
   context: AnalysisContext,
-  _statement: SleepStatement
+  _statement: SleepStatement,
 ): AnalysisContext {
   return context;
 }
@@ -164,7 +166,7 @@ const analyzeStatement = withIndex(
       default:
         return exhaustive(statement);
     }
-  }
+  },
 );
 
 export { analyzeScopedStatement, analyzeStatements };
