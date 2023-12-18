@@ -4,8 +4,12 @@
       {
         "type": "http-request",
         "method": "GET",
-        "url": "http://localhost:8080/",
-        "variables": {}
+        "url": "http://localhost:8080/echo",
+        "variables": {
+          "myVar": {
+            "type": "raw"
+          }
+        }
       }
     ]
   },

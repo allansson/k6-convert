@@ -1,5 +1,11 @@
 interface Node {}
 
+interface RawVariable extends Node {
+  type: "raw";
+}
+
+type Variable = RawVariable;
+
 interface JsonEncodedBody extends Node {
   mimeType: "application/json";
   content: string;
@@ -19,6 +25,7 @@ type HttpMethod = SafeHttpMethod | UnsafeHttpMethod;
 
 interface HttpRequestStepBase extends Node {
   url: string;
+  variables: Record<string, Variable>;
 }
 
 interface SafeHttpRequestStep extends HttpRequestStepBase {
@@ -78,6 +85,7 @@ export type {
   JsonEncodedBody,
   LogStep,
   Node,
+  RawVariable,
   SafeHttpRequestStep,
   Scenario,
   SleepStep,
@@ -85,4 +93,5 @@ export type {
   Test,
   UnsafeHttpRequestStep,
   UrlEncodedBody,
+  Variable,
 };

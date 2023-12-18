@@ -25,7 +25,12 @@ function getTests(paths: string[]) {
 }
 
 describe("test", () => {
-  const directories = getTests(["test/scenarios", "test/http"]);
+  const directories = getTests([
+    "test/scenarios",
+    "test/http",
+    "test/groups",
+    "test/variables",
+  ]);
 
   it.each(directories)("$name", async ({ input, output }) => {
     const [inputJSON, outputJS] = await Promise.all([

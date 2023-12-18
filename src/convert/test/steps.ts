@@ -1,13 +1,15 @@
-import { ok } from "~/src/context";
+import { join, ok, reduce } from "~/src/context";
 import {
   array,
   boolean,
   declare,
   expression,
+  fragment,
   group,
   identifier,
   jsonEncodedBody,
   log,
+  member,
   nil,
   number,
   object,
@@ -17,7 +19,10 @@ import {
   unsafeHttp,
   urlEncodedBody,
   type Expression,
+  type HttpExpression,
+  type IdentifierExpression,
   type Statement,
+  type UserVariableDeclaration,
 } from "~/src/convert/ast";
 import type {
   ConverterContext,
@@ -29,11 +34,13 @@ import type {
   HttpRequestStep,
   JsonEncodedBody,
   LogStep,
+  RawVariable,
   SafeHttpRequestStep,
   SleepStep,
   Step,
   UnsafeHttpRequestStep,
   UrlEncodedBody,
+  Variable,
 } from "~/src/convert/test/types";
 
 interface EncodedBody {
@@ -136,34 +143,87 @@ function fromHttpRequestBody(
   }
 }
 
-function fromSafeHttpRequestStep(
+function fromRawVariable(
   _context: ConverterContext,
+  name: string,
+  target: IdentifierExpression,
+  _variable: RawVariable,
+): ConverterResult<UserVariableDeclaration> {
+  return ok(declare("const", name, member(target, identifier("body"))));
+}
+
+function fromVariable(
+  context: ConverterContext,
+  name: string,
+  target: IdentifierExpression,
+  variable: Variable,
+) {
+  switch (variable.type) {
+    case "raw":
+      return fromRawVariable(context, name, target, variable);
+  }
+}
+
+function fromHttpRequestStepWithVariables(
+  context: ConverterContext,
+  step: HttpRequestStep,
+  request: HttpExpression,
+): ConverterResult<Statement[]> {
+  const variables = Object.entries(step.variables);
+
+  if (variables.length === 0) {
+    return ok([expression(request)]);
+  }
+
+  const response = identifier("response");
+
+  const statements = join(
+    variables.map(([name, variable]) => {
+      return fromVariable(context, name, response, variable);
+    }),
+  );
+
+  return statements.map((declarations) => [
+    declare("const", "response", request),
+    fragment(declarations),
+  ]);
+}
+
+function fromSafeHttpRequestStep(
+  context: ConverterContext,
   step: SafeHttpRequestStep,
-): ConverterResult<Statement> {
-  return ok(expression(safeHttp(step.method, string(step.url))));
+): ConverterResult<Statement[]> {
+  return fromHttpRequestStepWithVariables(
+    context,
+    step,
+    safeHttp(step.method, string(step.url)),
+  );
 }
 
 function fromUnsafeHttpRequestStep(
   context: ConverterContext,
   step: UnsafeHttpRequestStep,
 ): ConverterResult<Statement[]> {
-  return fromHttpRequestBody(context, step.body).map(
+  return fromHttpRequestBody(context, step.body).andThen(
     ({ expression: body, headers }) => {
-      if (headers !== undefined) {
-        return [
-          declare("const", "body", body),
-          expression(
-            unsafeHttp(
-              step.method,
-              string(step.url),
-              identifier("body"),
-              headers,
-            ),
-          ),
-        ];
-      }
+      const bodyParam = headers !== undefined ? identifier("body") : body;
 
-      return [expression(unsafeHttp(step.method, string(step.url), body))];
+      const request = unsafeHttp(
+        step.method,
+        string(step.url),
+        bodyParam,
+        headers,
+      );
+
+      return fromHttpRequestStepWithVariables(context, step, request).map(
+        (declarations) => {
+          if (headers === undefined) {
+            return declarations;
+          }
+
+          return [declare("const", "body", body), ...declarations];
+        },
+      );
     },
   );
 }
@@ -183,19 +243,31 @@ function fromHttpRequestStep(context: ConverterContext, step: HttpRequestStep) {
   }
 }
 
-function fromGroupStep(context: ConverterContext, step: GroupStep) {
+function fromGroupStep(
+  context: ConverterContext,
+  step: GroupStep,
+): ConverterResult<Statement> {
   return fromSteps(context, step.steps).map((steps) => group(step.name, steps));
 }
 
-function fromSleepStep(_context: ConverterContext, step: SleepStep) {
+function fromSleepStep(
+  _context: ConverterContext,
+  step: SleepStep,
+): ConverterResult<Statement> {
   return ok(sleep(step.seconds));
 }
 
-function fromLogStep(_context: ConverterContext, step: LogStep) {
+function fromLogStep(
+  _context: ConverterContext,
+  step: LogStep,
+): ConverterResult<Statement> {
   return ok(log("log", string(step.message)));
 }
 
-function fromStep(context: ConverterContext, step: Step) {
+function fromStep(
+  context: ConverterContext,
+  step: Step,
+): ConverterResult<Statement[] | Statement> {
   switch (step.type) {
     case "group":
       return fromGroupStep(context, step);
@@ -219,17 +291,15 @@ function fromSteps(
   context: ConverterContext,
   steps: Step[],
 ): ConverterResult<Statement[]> {
-  const [first, ...rest] = steps.map((step) =>
+  const results = steps.map((step) =>
     fromStep(context, step).map((value) => flatten(value)),
   );
 
-  if (first === undefined) {
-    return ok([]);
-  }
+  const statements: Statement[] = [];
 
-  return rest.reduce((result, next) => {
-    return result.andThen((steps) => next.map((next) => [...steps, ...next]));
-  }, first);
+  return reduce(statements, results, (statements, value) => {
+    return [...statements, ...value];
+  });
 }
 
 export { fromSteps };

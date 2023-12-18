@@ -1,5 +1,19 @@
 import { expect, it } from "@jest/globals";
-import { defaultScenario, scenario, test } from "~/src/convert/ast";
+import {
+  declare,
+  defaultScenario,
+  expression,
+  fragment,
+  identifier,
+  jsonEncodedBody,
+  member,
+  object,
+  safeHttp,
+  scenario,
+  string,
+  test,
+  unsafeHttp,
+} from "~/src/convert/ast";
 import { fromTest } from "~/src/convert/test";
 import type {
   DefaultScenario,
@@ -94,6 +108,7 @@ it("should report a problem when json body of a request is malformed", () => {
     method: "POST",
     url: "https://example.com",
     body,
+    variables: {},
   };
 
   const defaultScenario: DefaultScenario = {
@@ -114,4 +129,154 @@ it("should report a problem when json body of a request is malformed", () => {
       node: body,
     },
   ]);
+});
+
+describe("http variable declarations", () => {
+  it("should not emit a response declaration when safe http response is not used", () => {
+    const step: HttpRequestStep = {
+      type: "http-request",
+      method: "GET",
+      url: "https://example.com",
+      variables: {},
+    };
+
+    const input: Test = {
+      defaultScenario: {
+        steps: [step],
+      },
+      scenarios: {},
+    };
+
+    expect(fromTest(input).unsafeUnwrap()).toEqual(
+      test(
+        defaultScenario(undefined, [
+          expression(safeHttp("GET", "https://example.com")),
+        ]),
+      ),
+    );
+  });
+
+  it("should emit variable declaration when safe http request has a variable", () => {
+    const step: HttpRequestStep = {
+      type: "http-request",
+      method: "GET",
+      url: "https://example.com",
+      variables: {
+        myVariable: {
+          type: "raw",
+        },
+      },
+    };
+
+    const input: Test = {
+      defaultScenario: {
+        steps: [step],
+      },
+      scenarios: {},
+    };
+
+    expect(fromTest(input).unsafeUnwrap()).toEqual(
+      test(
+        defaultScenario(undefined, [
+          declare("const", "response", safeHttp("GET", "https://example.com")),
+          fragment([
+            declare(
+              "const",
+              "myVariable",
+              member(identifier("response"), identifier("body")),
+            ),
+          ]),
+        ]),
+      ),
+    );
+  });
+
+  it("should not emit a response declaration when unsafe http response is not used", () => {
+    const step: HttpRequestStep = {
+      type: "http-request",
+      method: "POST",
+      url: "https://example.com",
+      body: {
+        mimeType: "application/json",
+        content: "{}",
+      },
+      variables: {},
+    };
+
+    const input: Test = {
+      defaultScenario: {
+        steps: [step],
+      },
+      scenarios: {},
+    };
+
+    expect(fromTest(input).unsafeUnwrap()).toEqual(
+      test(
+        defaultScenario(undefined, [
+          declare("const", "body", jsonEncodedBody(object({}))),
+          expression(
+            unsafeHttp(
+              "POST",
+              "https://example.com",
+              identifier("body"),
+              object({
+                "Content-Type": string("application/json"),
+              }),
+            ),
+          ),
+        ]),
+      ),
+    );
+  });
+
+  it("should emit variable declaration when unsafe http request has a variable", () => {
+    const step: HttpRequestStep = {
+      type: "http-request",
+      method: "POST",
+      url: "https://example.com",
+      body: {
+        mimeType: "application/json",
+        content: "{}",
+      },
+      variables: {
+        myVariable: {
+          type: "raw",
+        },
+      },
+    };
+
+    const input: Test = {
+      defaultScenario: {
+        steps: [step],
+      },
+      scenarios: {},
+    };
+
+    expect(fromTest(input).unsafeUnwrap()).toEqual(
+      test(
+        defaultScenario(undefined, [
+          declare("const", "body", jsonEncodedBody(object({}))),
+          declare(
+            "const",
+            "response",
+            unsafeHttp(
+              "POST",
+              "https://example.com",
+              identifier("body"),
+              object({
+                "Content-Type": string("application/json"),
+              }),
+            ),
+          ),
+          fragment([
+            declare(
+              "const",
+              "myVariable",
+              member(identifier("response"), identifier("body")),
+            ),
+          ]),
+        ]),
+      ),
+    );
+  });
 });

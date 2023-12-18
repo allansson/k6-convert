@@ -1,11 +1,13 @@
-import { ok, type Result } from "~/src/context";
+import { fail, ok, type Result } from "~/src/context";
 import type { HarInput } from "~/src/convert/har";
 import type { TestInput } from "~/src/convert/test";
 import { TestSchema } from "~/src/convert/test/schema";
+import type { ParseError } from "~/src/validation";
 
 interface InvalidTestSchemaError {
   type: "InvalidTestSchemaError";
   content: string;
+  errors: ParseError[];
 }
 
 interface InvalidJsonError {
@@ -52,14 +54,10 @@ function toTestInput(input: JsonEncodedTestInput): JsonDecodeResult<TestInput> {
     const result = TestSchema.parse(content);
 
     if (!result.ok) {
-      const errors = result.errors
-        .map((error) => `   ${error.path} - ${error.message}`)
-        .join("\n");
-
       return fail({
         type: "InvalidTestSchemaError",
         content: input.content,
-        error: new Error(`Invalid test schema:\n${errors}`),
+        errors: result.errors,
       });
     }
 

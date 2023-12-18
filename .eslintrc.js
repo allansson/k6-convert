@@ -7,7 +7,7 @@ module.exports = {
     "plugin:import/recommended",
     "prettier",
   ],
-  ignorePatterns: ["./dist/**/*", ".eslintrc.js"],
+  ignorePatterns: ["dist/**/*", "tests/e2e/test/**/*", ".eslintrc.js"],
   parserOptions: {
     project: "./tsconfig.json",
   },

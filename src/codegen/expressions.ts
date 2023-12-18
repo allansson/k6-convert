@@ -14,6 +14,7 @@ import type {
   HttpMethod,
   IdentifierExpression,
   JsonEncodedBodyExpression,
+  MemberExpression,
   NullExpression,
   NumberLiteralExpression,
   ObjectLiteralExpression,
@@ -145,6 +146,16 @@ function emitNull(
   return literal(null);
 }
 
+function emitMemberExpression(
+  context: EmitContext,
+  expression: MemberExpression,
+): es.Expression {
+  const object = emitExpression(context, expression.object);
+  const property = emitExpression(context, expression.property);
+
+  return member(object, property);
+}
+
 function emitExpression(
   context: EmitContext,
   expression: Expression,
@@ -182,6 +193,9 @@ function emitExpression(
 
     case "ArrayLiteralExpression":
       return emitArrayLiteralExpression(context, expression);
+
+    case "MemberExpression":
+      return emitMemberExpression(context, expression);
   }
 }
 

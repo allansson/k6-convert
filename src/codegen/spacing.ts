@@ -6,7 +6,7 @@ function spaceBetween<Node extends es.Node>(nodes: Node[]): Node[] {
   for (let i = 0; i < newNodes.length - 1; i++) {
     const node = newNodes[i];
 
-    if (node === null || node === undefined) {
+    if (node === null || node === undefined || node.newLine === "none") {
       continue;
     }
 
@@ -42,4 +42,11 @@ function newLine<N extends es.Node>(place: es.NewLine, node: N): N {
   };
 }
 
-export { newLine, spaceAfter, spaceBetween };
+function noSpacing<N extends es.Node>(node: N): N {
+  return {
+    ...node,
+    newLine: "none",
+  };
+}
+
+export { newLine, noSpacing, spaceAfter, spaceBetween };

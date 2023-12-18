@@ -13,10 +13,11 @@ import {
 } from "~/src/codegen/builders/statements";
 import type { EmitContext } from "~/src/codegen/context";
 import { emitExpression } from "~/src/codegen/expressions";
-import { spaceBetween } from "~/src/codegen/spacing";
+import { noSpacing, spaceBetween } from "~/src/codegen/spacing";
 import type {
   AssignStatement,
   ExpressionStatement,
+  Fragment,
   GroupStatement,
   LogStatement,
   SleepStatement,
@@ -26,9 +27,9 @@ import type {
 
 function emitBody(
   context: EmitContext,
-  statements: Statement[]
+  statements: Statement[],
 ): es.Statement[] {
-  const body = statements.map((statement) => {
+  const body = statements.flatMap((statement) => {
     return emitStatement(context, statement);
   });
 
@@ -37,7 +38,7 @@ function emitBody(
 
 function emitGroupStatement(
   context: EmitContext,
-  statement: GroupStatement
+  statement: GroupStatement,
 ): es.Statement {
   context.import("group", "k6");
 
@@ -51,7 +52,7 @@ function emitGroupStatement(
 
 function emitSleepStatement(
   context: EmitContext,
-  statement: SleepStatement
+  statement: SleepStatement,
 ): es.Statement {
   context.import("sleep", "k6");
 
@@ -62,7 +63,7 @@ function emitSleepStatement(
 
 function emitLogStatement(
   context: EmitContext,
-  statement: LogStatement
+  statement: LogStatement,
 ): es.Statement {
   const expression = call(member("console", "log"), [
     emitExpression(context, statement.expression),
@@ -73,11 +74,11 @@ function emitLogStatement(
 
 function emitAssignStatement(
   context: EmitContext,
-  statement: AssignStatement
+  statement: AssignStatement,
 ): es.Statement {
   const expression = assign(
     statement.name,
-    emitExpression(context, statement.expression)
+    emitExpression(context, statement.expression),
   );
 
   return expressionStatement(expression);
@@ -85,28 +86,37 @@ function emitAssignStatement(
 
 function emitUserVariableDeclaration(
   context: EmitContext,
-  statement: UserVariableDeclaration
+  statement: UserVariableDeclaration,
 ): es.Statement {
   return declare(
     statement.kind,
     statement.name,
-    emitExpression(context, statement.expression)
+    emitExpression(context, statement.expression),
   );
 }
 
 function emitExpressionStatement(
   context: EmitContext,
-  statement: ExpressionStatement
+  statement: ExpressionStatement,
 ): es.Statement {
   const expression = emitExpression(context, statement.expression);
 
   return expressionStatement(expression);
 }
 
+function emitFragment(
+  context: EmitContext,
+  fragment: Fragment,
+): es.Statement[] {
+  return fragment.statements
+    .flatMap((statement) => emitStatement(context, statement))
+    .map(noSpacing);
+}
+
 function emitStatement(
   context: EmitContext,
-  statement: Statement
-): es.Statement {
+  statement: Statement,
+): es.Statement | es.Statement[] {
   switch (statement.type) {
     case "ExpressionStatement":
       return emitExpressionStatement(context, statement);
@@ -125,6 +135,9 @@ function emitStatement(
 
     case "UserVariableDeclaration":
       return emitUserVariableDeclaration(context, statement);
+
+    case "Fragment":
+      return emitFragment(context, statement);
   }
 }
 

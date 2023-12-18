@@ -264,6 +264,38 @@ function map2<
   return first.andThen((first) => second.map((second) => fn(first, second)));
 }
 
+function reduce<Value, Acc, Problem, Error>(
+  initialValue: Acc,
+  values: Array<Result<Value, Problem, Error>>,
+  fn: (result: Acc, value: Value) => Acc,
+): Result<Acc, Problem, Error> {
+  const result: Result<Acc, Problem, Error> = ok(initialValue);
+
+  return values.reduce((result, value) => {
+    return result.andThen((result) => value.map((value) => fn(result, value)));
+  }, result);
+}
+
+function mapAll<Value, NewValue, Issue, Error>(
+  results: Array<Result<Value, Issue, Error>>,
+  fn: (values: Value) => NewValue,
+): Result<NewValue[], Issue, Error> {
+  const first: NewValue[] = [];
+
+  return reduce(first, results, (values, value) => {
+    return [...values, fn(value)];
+  });
+}
+
+function join<Value, Issue, Error>(
+  results: Array<Result<Value, Issue, Error>>,
+): Result<Value[], Issue, Error> {
+  const first: Value[] = [];
+
+  return reduce(first, results, (values, value) => {
+    return [...values, value];
+  });
+}
 function fromPromise<Value>(
   promise: Promise<Value>,
 ): AsyncResult<Value, never, never> {
@@ -275,8 +307,11 @@ export {
   fail,
   flatten,
   fromPromise,
+  join,
   map2,
+  mapAll,
   ok,
+  reduce,
   type AsyncResult,
   type Result,
 };

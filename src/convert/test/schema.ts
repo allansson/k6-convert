@@ -26,6 +26,12 @@ import {
   type Parser,
 } from "~/src/validation";
 
+const rawVariable = object({
+  type: literal("raw"),
+});
+
+const variable = rawVariable;
+
 const JsonEncodedBodySchema: Parser<HttpRequestBody> = object({
   mimeType: literal("application/json"),
   content: string(),
@@ -43,6 +49,7 @@ const HttpRequesBodySchema: Parser<HttpRequestBody> = union([
 
 const HttpRequestStepBaseSchema = object({
   url: string(),
+  variables: record(variable),
 });
 
 const SafeHttpRequestSchema: Parser<SafeHttpRequestStep> = extend(

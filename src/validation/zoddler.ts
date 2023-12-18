@@ -46,7 +46,7 @@ class Parser<T, Optional extends boolean = false> {
 
   constructor(
     parseFn: (context: ParseContext) => ParseResult<T>,
-    required = true
+    required = true,
   ) {
     this.required = required;
     this.parseFn = parseFn;
@@ -197,7 +197,7 @@ function record<T>(parser: Parser<T>) {
 }
 
 function object<T extends ParserObject<unknown>>(
-  parsers: T
+  parsers: T,
 ): Parser<{ [P in keyof ParsedObject<T>]: ParsedObject<T>[P] }> {
   return new Parser((context) => {
     if (!isObject(context.input)) {
@@ -257,7 +257,7 @@ type Extension<P extends object, E extends ParserObject<unknown>> = P & {
 
 function extend<T extends object, U extends ParserObject<unknown>>(
   baseSchema: Parser<T>,
-  extension: U
+  extension: U,
 ): Parser<{ [P in keyof Extension<T, U>]: Extension<T, U>[P] }> {
   const extensionParser = object(extension);
 
@@ -373,7 +373,7 @@ function tuple<E extends [...Array<Parser<unknown>>]>(...parsers: E) {
     return ok(
       result as {
         [K in keyof E]: E[K] extends Parser<infer U> ? U : never;
-      }
+      },
     );
   });
 }
@@ -432,6 +432,7 @@ export {
   tuple,
   union,
   type Infer,
+  type ParseError,
   type ParseResult,
   type Parser,
 };

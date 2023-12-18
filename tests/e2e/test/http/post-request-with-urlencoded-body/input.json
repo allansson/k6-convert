@@ -10,7 +10,8 @@
           "params": {
             "foo": "bar"
           }
-        }
+        },
+        "variables": {}
       }
     ]
   },

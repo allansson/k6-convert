@@ -63,6 +63,12 @@ interface ArrayLiteralExpression extends AstNode {
   elements: Expression[];
 }
 
+interface MemberExpression extends AstNode {
+  type: "MemberExpression";
+  object: Expression;
+  property: Expression;
+}
+
 type Expression =
   | ArrayLiteralExpression
   | BooleanLiteralExpression
@@ -73,7 +79,8 @@ type Expression =
   | NumberLiteralExpression
   | ObjectLiteralExpression
   | StringLiteralExpression
-  | UrlEncodedBodyExpression;
+  | UrlEncodedBodyExpression
+  | MemberExpression;
 
 interface GroupStatement extends AstNode {
   type: "GroupStatement";
@@ -112,13 +119,19 @@ interface ExpressionStatement extends AstNode {
   expression: Expression;
 }
 
+interface Fragment extends AstNode {
+  type: "Fragment";
+  statements: Statement[];
+}
+
 type Statement =
   | AssignStatement
   | ExpressionStatement
   | GroupStatement
   | LogStatement
   | SleepStatement
-  | UserVariableDeclaration;
+  | UserVariableDeclaration
+  | Fragment;
 
 interface ScenarioBase extends AstNode {
   name?: string;
@@ -234,6 +247,14 @@ function nil(): NullExpression {
   };
 }
 
+function member(object: Expression, property: Expression): MemberExpression {
+  return {
+    type: "MemberExpression",
+    object,
+    property,
+  };
+}
+
 function group(name: string, statements: Statement[]): GroupStatement {
   return {
     type: "GroupStatement",
@@ -282,6 +303,13 @@ function expression(expression: Expression): ExpressionStatement {
   return {
     type: "ExpressionStatement",
     expression,
+  };
+}
+
+function fragment(statements: Statement[]): Fragment {
+  return {
+    type: "Fragment",
+    statements,
   };
 }
 
@@ -348,10 +376,12 @@ export {
   declare,
   defaultScenario,
   expression,
+  fragment,
   group,
   identifier,
   jsonEncodedBody,
   log,
+  member,
   nil,
   number,
   object,
@@ -369,11 +399,14 @@ export {
   type DefaultScenarioDeclaration,
   type Expression,
   type ExpressionStatement,
+  type Fragment,
   type GroupStatement,
+  type HttpExpression,
   type HttpMethod,
   type IdentifierExpression,
   type JsonEncodedBodyExpression,
   type LogStatement,
+  type MemberExpression,
   type NullExpression,
   type NumberLiteralExpression,
   type ObjectLiteralExpression,

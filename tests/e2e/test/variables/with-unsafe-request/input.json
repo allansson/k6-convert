@@ -3,13 +3,17 @@
     "steps": [
       {
         "type": "http-request",
-        "method": "POST",
+        "method": "PUT",
         "url": "http://localhost:8080/echo",
         "body": {
           "mimeType": "application/json",
-          "content": "Hey, this is not JSON!"
+          "content": "{}"
         },
-        "variables": {}
+        "variables": {
+          "myVar": {
+            "type": "raw"
+          }
+        }
       }
     ]
   },

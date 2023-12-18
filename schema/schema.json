@@ -67,6 +67,9 @@
             },
             "type": "object"
         },
+        "Record<string,RawVariable>": {
+            "type": "object"
+        },
         "Record<string,string>": {
             "type": "object"
         },
@@ -89,6 +92,9 @@
                 },
                 "url": {
                     "type": "string"
+                },
+                "variables": {
+                    "$ref": "#/definitions/Record<string,RawVariable>"
                 }
             },
             "type": "object"
@@ -161,6 +167,9 @@
                 },
                 "url": {
                     "type": "string"
+                },
+                "variables": {
+                    "$ref": "#/definitions/Record<string,RawVariable>"
                 }
             },
             "type": "object"
