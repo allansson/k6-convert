@@ -21,7 +21,7 @@ it("should do nothing when variable is only referenced in the same scope", () =>
     log("log", identifier("a")),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("should do nothing when variable is referenced in a child scope", () => {
@@ -37,7 +37,7 @@ it("should do nothing when variable is referenced in a child scope", () => {
     group("child", [log("log", identifier("a"))]),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("it should do nothing when variable is re-declared in child scope and not referenced outside it", () => {
@@ -59,7 +59,7 @@ it("it should do nothing when variable is re-declared in child scope and not ref
     ]),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("should hoist declaration to same scope as the variabled reference", () => {
@@ -77,7 +77,7 @@ it("should hoist declaration to same scope as the variabled reference", () => {
     log("log", identifier("a")),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("it should hoist declaration to a scope so that all references can access it", () => {
@@ -95,7 +95,7 @@ it("it should hoist declaration to a scope so that all references can access it"
     group("child2", [log("log", identifier("a"))]),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("it should insert declaration before the group where it was hoisted from", () => {
@@ -121,7 +121,7 @@ it("it should insert declaration before the group where it was hoisted from", ()
     log("log", identifier("c")),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("it should hoist declaration from nested scopes", () => {
@@ -139,7 +139,7 @@ it("it should hoist declaration from nested scopes", () => {
     log("log", identifier("a")),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("should hoist re-declared variables to the scope where they are visible to the remaining references", () => {
@@ -181,5 +181,5 @@ it("should hoist re-declared variables to the scope where they are visible to th
     log("log", identifier("b")),
   ]);
 
-  expect(hoistVariables(input)).toEqual(expected);
+  expect(hoistVariables(input).unsafeUnwrap()).toEqual(expected);
 });

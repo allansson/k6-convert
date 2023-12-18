@@ -5,6 +5,8 @@ import {
   type DeclarationInfo,
   type NodeId,
 } from "~/src/analysis";
+import type { AnalysisIssue } from "~/src/analysis/analysis";
+import type { Result } from "~/src/context";
 import {
   assign,
   declare,
@@ -17,7 +19,6 @@ import {
   applyRewrites,
   type RewriteMap,
 } from "~/src/processing/rewrite";
-import { Chain } from "~/src/utils";
 
 function findSharedScope(declaration: DeclarationInfo): NodeId {
   for (let i = 0; i < declaration.scope.path.length; i++) {
@@ -47,28 +48,26 @@ function generateRewrites(analysis: Analysis): RewriteMap {
 
     if (scope === undefined) {
       throw new Error(
-        "Could not find a scope when hoisting variables. This is a bug."
+        "Could not find a scope when hoisting variables. This is a bug.",
       );
     }
 
     rewriter.insertBefore(
       scope.node,
-      declare("let", declaration.node.name, nil())
+      declare("let", declaration.node.name, nil()),
     );
 
     rewriter.replace(
       declaration.node,
-      assign(declaration.node.name, declaration.node.expression)
+      assign(declaration.node.name, declaration.node.expression),
     );
   }
 
   return rewriter.done();
 }
 
-export function hoistVariables(statement: GroupStatement): Statement {
-  return Chain.from(statement)
-    .map(analyze)
-    .map(generateRewrites)
-    .map(applyRewrites(statement))
-    .unwrap();
+export function hoistVariables(
+  statement: GroupStatement,
+): Result<Statement, AnalysisIssue, never> {
+  return analyze(statement).map(generateRewrites).map(applyRewrites(statement));
 }

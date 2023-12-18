@@ -1,11 +1,13 @@
 import type {
   Analysis,
   AnalysisContext,
+  AnalysisIssue,
   ScopedStatement,
   ScopedStatementInfo,
   ScopeInfo,
 } from "~/src/analysis/analysis";
 import { analyzeStatements } from "~/src/analysis/statements";
+import type { Result } from "~/src/context";
 
 function rootContext(statement: ScopedStatement): AnalysisContext {
   const scope: ScopeInfo = {
@@ -33,22 +35,19 @@ function rootContext(statement: ScopedStatement): AnalysisContext {
       [scope.id]: scope,
     },
     declarations: [],
-    issues: [],
   };
 }
 
-function analyze(statement: ScopedStatement): Analysis {
-  const { statements, scopes, declarations, issues } = analyzeStatements(
-    rootContext(statement),
-    statement.statements
+function analyze(
+  statement: ScopedStatement,
+): Result<Analysis, AnalysisIssue, never> {
+  return analyzeStatements(rootContext(statement), statement.statements).map(
+    ({ statements, scopes, declarations }) => ({
+      statements,
+      scopes,
+      declarations,
+    }),
   );
-
-  return {
-    statements,
-    scopes,
-    declarations,
-    issues,
-  };
 }
 
 export {

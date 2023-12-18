@@ -13,7 +13,7 @@ it("should do nothing when variable is re-declared in a child scope", () => {
     group("child", [declare("const", "a", string(""))]),
   ]);
 
-  expect(mergeDeclarations(input)).toEqual(expected);
+  expect(mergeDeclarations(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("should do nothing when variable is declared in a parent scope", () => {
@@ -27,7 +27,7 @@ it("should do nothing when variable is declared in a parent scope", () => {
     declare("const", "a", string("")),
   ]);
 
-  expect(mergeDeclarations(input)).toEqual(expected);
+  expect(mergeDeclarations(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("should change declaration to a let-declaration and change other declarations to assignments", () => {
@@ -41,7 +41,7 @@ it("should change declaration to a let-declaration and change other declarations
     assign("a", string("")),
   ]);
 
-  expect(mergeDeclarations(input)).toEqual(expected);
+  expect(mergeDeclarations(input).unsafeUnwrap()).toEqual(expected);
 });
 
 it("should change declaration to a let-declaration and change other declarations to assignments in a child scope", () => {
@@ -56,5 +56,5 @@ it("should change declaration to a let-declaration and change other declarations
     group("child", [declare("let", "a", string("")), assign("a", string(""))]),
   ]);
 
-  expect(mergeDeclarations(input)).toEqual(expected);
+  expect(mergeDeclarations(input).unsafeUnwrap()).toEqual(expected);
 });

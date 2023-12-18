@@ -32,7 +32,7 @@ describe("indexing", () => {
 
     const root = group("root", [groupNode, declarationNode]);
 
-    const analysis = analyze(root);
+    const analysis = analyze(root).unsafeUnwrap();
 
     const rootScope = createRootScope(root);
     const rootParent = createRootParent(root);
@@ -62,7 +62,7 @@ describe("scopes", () => {
     const child = group("child", []);
     const root = group("root", [child]);
 
-    const analysis = analyze(root);
+    const analysis = analyze(root).unsafeUnwrap();
 
     expect(analysis.scopes).toEqual({
       "/": createRootScope(root),
@@ -82,7 +82,7 @@ describe("declarations", () => {
 
     const root = group("root", [declaration1, declaration2]);
 
-    const analysis = analyze(root);
+    const analysis = analyze(root).unsafeUnwrap();
 
     const rootScope = createRootScope(root);
     const rootParent = createRootParent(root);
@@ -138,7 +138,7 @@ describe("references", () => {
       log("log", reference2),
     ]);
 
-    const analysis = analyze(root);
+    const analysis = analyze(root).unsafeUnwrap();
 
     const rootScope = createRootScope(root);
     const rootParent = createRootParent(root);
@@ -175,9 +175,9 @@ describe("references", () => {
 
     const root = group("root", [declaration, log("log", reference)]);
 
-    const analysis = analyze(root);
+    const result = analyze(root);
 
-    expect(analysis.issues).toEqual([
+    expect(result.issues).toEqual([
       {
         type: "UndeclaredVariable",
         node: reference,
@@ -200,7 +200,7 @@ describe("references", () => {
 
     const root = group("root", [declaration1, child]);
 
-    const analysis = analyze(root);
+    const analysis = analyze(root).unsafeUnwrap();
 
     const rootScope = createRootScope(root);
     const rootParent = createRootParent(root);

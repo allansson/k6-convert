@@ -1,3 +1,4 @@
+import type { Result } from "~/src/context";
 import type {
   AstNode,
   GroupStatement,
@@ -17,7 +18,9 @@ interface DuplicateVariableDeclarationIssue {
   node: UserVariableDeclaration;
 }
 
-type Issue = UndeclaredVariableIssue | DuplicateVariableDeclarationIssue;
+type AnalysisIssue =
+  | UndeclaredVariableIssue
+  | DuplicateVariableDeclarationIssue;
 
 type ScopedStatement = GroupStatement;
 
@@ -64,22 +67,20 @@ interface AnalysisContext {
   statements: NodeMap<StatementInfo>;
   scopes: NodeMap<ScopeInfo>;
   declarations: DeclarationInfo[];
-
-  issues: Issue[];
 }
 
 interface Analysis {
   statements: Record<NodeId, StatementInfo>;
   scopes: Record<NodeId, ScopeInfo>;
   declarations: DeclarationInfo[];
-
-  issues: Issue[];
 }
 
 type AnalysisFn<N extends AstNode> = (
   node: N,
-  context: AnalysisContext
-) => AnalysisContext;
+  context: AnalysisContext,
+) => AnalysisResult;
+
+type AnalysisResult = Result<AnalysisContext, AnalysisIssue, never>;
 
 function toNodeId(path: NodePath): NodeId {
   return "/" + path.join("/");
@@ -97,19 +98,13 @@ function withIndex<N extends AstNode>(fn: AnalysisFn<N>): AnalysisFn<N> {
   };
 }
 
-function report(context: AnalysisContext, issue: Issue) {
-  return {
-    ...context,
-    issues: [...context.issues, issue],
-  };
-}
-
 export {
-  report,
   toNodeId,
   withIndex,
   type Analysis,
   type AnalysisContext,
+  type AnalysisIssue,
+  type AnalysisResult,
   type DeclarationInfo,
   type NodeId,
   type NodePath,

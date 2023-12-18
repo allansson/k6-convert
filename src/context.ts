@@ -8,67 +8,63 @@ class UnsafeUnwrapError<E> extends Error {
   }
 }
 
-interface ResultBase<Value, Problem, Error> {
-  with<NewValue>(value: NewValue): Result<NewValue, Problem, Error>;
+interface ResultBase<Value, Issue, Error> {
+  with<NewValue>(value: NewValue): Result<NewValue, Issue, Error>;
 
-  map<NewValue>(
-    fn: (value: Value) => NewValue,
-  ): Result<NewValue, Problem, Error>;
+  map<NewValue>(fn: (value: Value) => NewValue): Result<NewValue, Issue, Error>;
 
-  andThen<NewValue, NewProblem, NewError>(
-    fn: (value: Value) => AsyncResult<NewValue, NewProblem, NewError>,
-  ): AsyncResult<NewValue, Problem | NewProblem, Error | NewError>;
-  andThen<NewValue, NewProblem, NewError>(
-    fn: (value: Value) => Result<NewValue, NewProblem, NewError>,
-  ): Result<NewValue, Problem | NewProblem, Error | NewError>;
+  andThen<NewValue, NewIssue, NewError>(
+    fn: (value: Value) => AsyncResult<NewValue, NewIssue, NewError>,
+  ): AsyncResult<NewValue, Issue | NewIssue, Error | NewError>;
+  andThen<NewValue, NewIssue, NewError>(
+    fn: (value: Value) => Result<NewValue, NewIssue, NewError>,
+  ): Result<NewValue, Issue | NewIssue, Error | NewError>;
 
-  report<NewProblem>(
-    problem: NewProblem,
-  ): Result<Value, Problem | NewProblem, Error>;
-  fail<NewError>(error: NewError): Result<Value, Problem, Error | NewError>;
+  report<NewIssue>(issue: NewIssue): Result<Value, Issue | NewIssue, Error>;
+  fail<NewError>(error: NewError): Result<Value, Issue, Error | NewError>;
   recover<NewValue>(
     fn: (error: Error) => NewValue,
-  ): Result<Value | NewValue, Problem | Error, never>;
+  ): Result<Value | NewValue, Issue | Error, never>;
 
   unsafeUnwrap(): Value;
 }
 
-class OkResult<Value, Problem, Error = never>
-  implements ResultBase<Value, Problem, Error>
+class OkResult<Value, Issue, Error = never>
+  implements ResultBase<Value, Issue, Error>
 {
   ok = true as const;
 
   value: Value;
-  issues: Problem[];
+  issues: Issue[];
 
-  constructor(value: Value, problems: Problem[] = []) {
+  constructor(value: Value, issues: Issue[] = []) {
     this.value = value;
-    this.issues = problems;
+    this.issues = issues;
   }
 
-  with<NewValue>(value: NewValue): Result<NewValue, Problem, Error> {
+  with<NewValue>(value: NewValue): Result<NewValue, Issue, Error> {
     return new OkResult(value, this.issues);
   }
 
   map<NewValue>(
     fn: (value: Value) => NewValue,
-  ): Result<NewValue, Problem, Error> {
+  ): Result<NewValue, Issue, Error> {
     return new OkResult(fn(this.value), this.issues);
   }
 
-  andThen<NewValue, NewProblem, NewError>(
-    fn: (value: Value) => AsyncResult<NewValue, NewProblem, NewError>,
-  ): AsyncResult<NewValue, Problem | NewProblem, Error | NewError>;
-  andThen<NewValue, NewProblem, NewError>(
-    fn: (value: Value) => Result<NewValue, NewProblem, NewError>,
-  ): Result<NewValue, Problem | NewProblem, Error | NewError>;
-  andThen<NewValue, NewProblem, NewError>(
+  andThen<NewValue, NewIssue, NewError>(
+    fn: (value: Value) => AsyncResult<NewValue, NewIssue, NewError>,
+  ): AsyncResult<NewValue, Issue | NewIssue, Error | NewError>;
+  andThen<NewValue, NewIssue, NewError>(
+    fn: (value: Value) => Result<NewValue, NewIssue, NewError>,
+  ): Result<NewValue, Issue | NewIssue, Error | NewError>;
+  andThen<NewValue, NewIssue, NewError>(
     fn:
-      | ((value: Value) => Result<NewValue, NewProblem, NewError>)
-      | ((value: Value) => AsyncResult<NewValue, NewProblem, NewError>),
+      | ((value: Value) => Result<NewValue, NewIssue, NewError>)
+      | ((value: Value) => AsyncResult<NewValue, NewIssue, NewError>),
   ):
-    | Result<NewValue, Problem | NewProblem, Error | NewError>
-    | AsyncResult<NewValue, Problem | NewProblem, Error | NewError> {
+    | Result<NewValue, Issue | NewIssue, Error | NewError>
+    | AsyncResult<NewValue, Issue | NewIssue, Error | NewError> {
     const next = fn(this.value);
 
     if (next instanceof AsyncResult) {
@@ -96,19 +92,17 @@ class OkResult<Value, Problem, Error = never>
     return new OkResult(next.value, [...this.issues, ...next.issues]);
   }
 
-  report<NewProblem>(
-    problem: NewProblem,
-  ): Result<Value, Problem | NewProblem, Error> {
-    return new OkResult(this.value, [...this.issues, problem]);
+  report<NewIssue>(issue: NewIssue): Result<Value, Issue | NewIssue, Error> {
+    return new OkResult(this.value, [...this.issues, issue]);
   }
 
-  fail<NewError>(error: NewError): Result<Value, Problem, NewError | Error> {
+  fail<NewError>(error: NewError): Result<Value, Issue, NewError | Error> {
     return new ErrResult(error, this.issues);
   }
 
   recover<NewValue>(
     _fn: (error: Error) => NewValue,
-  ): Result<Value | NewValue, Problem | Error, never> {
+  ): Result<Value | NewValue, Issue | Error, never> {
     return new OkResult(this.value, this.issues);
   }
 
@@ -117,58 +111,56 @@ class OkResult<Value, Problem, Error = never>
   }
 }
 
-class ErrResult<Value, Problem, Error>
-  implements ResultBase<Value, Problem, Error>
+class ErrResult<Value, Issue, Error>
+  implements ResultBase<Value, Issue, Error>
 {
   ok = false as const;
 
   error: Error;
-  issues: Problem[];
+  issues: Issue[];
 
-  constructor(error: Error, problems: Problem[] = []) {
+  constructor(error: Error, issues: Issue[] = []) {
     this.error = error;
-    this.issues = problems;
+    this.issues = issues;
   }
 
-  with<NewValue>(_value: NewValue): Result<NewValue, Problem, Error> {
+  with<NewValue>(_value: NewValue): Result<NewValue, Issue, Error> {
     return new ErrResult(this.error, this.issues);
   }
 
   map<NewValue>(
     _fn: (value: Value) => NewValue,
-  ): Result<NewValue, Problem, Error> {
+  ): Result<NewValue, Issue, Error> {
     return new ErrResult(this.error, this.issues);
   }
 
-  andThen<NewValue, NewProblem, NewError>(
-    fn: (value: Value) => AsyncResult<NewValue, NewProblem, NewError>,
-  ): AsyncResult<NewValue, Problem | NewProblem, Error | NewError>;
-  andThen<NewValue, NewProblem, NewError>(
-    fn: (value: Value) => Result<NewValue, NewProblem, NewError>,
-  ): Result<NewValue, Problem | NewProblem, Error | NewError>;
-  andThen<NewValue, NewProblem, NewError>(
+  andThen<NewValue, NewIssue, NewError>(
+    fn: (value: Value) => AsyncResult<NewValue, NewIssue, NewError>,
+  ): AsyncResult<NewValue, Issue | NewIssue, Error | NewError>;
+  andThen<NewValue, NewIssue, NewError>(
+    fn: (value: Value) => Result<NewValue, NewIssue, NewError>,
+  ): Result<NewValue, Issue | NewIssue, Error | NewError>;
+  andThen<NewValue, NewIssue, NewError>(
     _fn:
-      | ((value: Value) => Result<NewValue, NewProblem, NewError>)
-      | ((value: Value) => AsyncResult<NewValue, NewProblem, NewError>),
+      | ((value: Value) => Result<NewValue, NewIssue, NewError>)
+      | ((value: Value) => AsyncResult<NewValue, NewIssue, NewError>),
   ):
-    | Result<NewValue, Problem | NewProblem, Error | NewError>
-    | AsyncResult<NewValue, Problem | NewProblem, Error | NewError> {
+    | Result<NewValue, Issue | NewIssue, Error | NewError>
+    | AsyncResult<NewValue, Issue | NewIssue, Error | NewError> {
     return new ErrResult(this.error, this.issues);
   }
 
-  report<NewProblem>(
-    problem: NewProblem,
-  ): Result<Value, Problem | NewProblem, Error> {
-    return new ErrResult(this.error, [...this.issues, problem]);
+  report<NewIssue>(issue: NewIssue): Result<Value, Issue | NewIssue, Error> {
+    return new ErrResult(this.error, [...this.issues, issue]);
   }
 
-  fail<NewError>(_error: NewError): Result<Value, Problem, Error | NewError> {
+  fail<NewError>(_error: NewError): Result<Value, Issue, Error | NewError> {
     return this;
   }
 
   recover<NewValue>(
     fn: (error: Error) => NewValue,
-  ): Result<Value | NewValue, Problem | Error, never> {
+  ): Result<Value | NewValue, Issue | Error, never> {
     return new OkResult(fn(this.error), [...this.issues, this.error]);
   }
 
@@ -177,35 +169,35 @@ class ErrResult<Value, Problem, Error>
   }
 }
 
-class AsyncResult<Value, Problem, Error>
-  implements PromiseLike<Result<Value, Problem, Error>>
+class AsyncResult<Value, Issue, Error>
+  implements PromiseLike<Result<Value, Issue, Error>>
 {
-  value: Promise<Result<Value, Problem, Error>>;
+  value: Promise<Result<Value, Issue, Error>>;
 
-  constructor(value: Promise<Result<Value, Problem, Error>>) {
+  constructor(value: Promise<Result<Value, Issue, Error>>) {
     this.value = value;
   }
 
-  with<NewValue>(value: NewValue): AsyncResult<NewValue, Problem, Error> {
+  with<NewValue>(value: NewValue): AsyncResult<NewValue, Issue, Error> {
     return new AsyncResult(Promise.resolve(ok(value)));
   }
 
   map<NewValue>(
     fn: (value: Value) => NewValue,
-  ): AsyncResult<NewValue, Problem, Error> {
+  ): AsyncResult<NewValue, Issue, Error> {
     return new AsyncResult(this.value.then((result) => result.map(fn)));
   }
 
-  andThen<NewValue, NewProblem, NewError>(
-    fn: (value: Value) => Result<NewValue, NewProblem, NewError>,
-  ): AsyncResult<NewValue, Problem | NewProblem, Error | NewError> {
+  andThen<NewValue, NewIssue, NewError>(
+    fn: (value: Value) => Result<NewValue, NewIssue, NewError>,
+  ): AsyncResult<NewValue, Issue | NewIssue, Error | NewError> {
     return new AsyncResult(this.value.then((result) => result.andThen(fn)));
   }
 
   then<NewValue1, NewValue2>(
     onfulfilled?:
       | ((
-          value: Result<Value, Problem, Error>,
+          value: Result<Value, Issue, Error>,
         ) => NewValue1 | PromiseLike<NewValue1>)
       | undefined
       | null,
@@ -217,28 +209,26 @@ class AsyncResult<Value, Problem, Error>
     return this.value.then(onfulfilled, onrejected);
   }
 
-  report<NewProblem>(
-    problem: NewProblem,
-  ): AsyncResult<Value, Problem | NewProblem, Error> {
+  report<NewIssue>(
+    problem: NewIssue,
+  ): AsyncResult<Value, Issue | NewIssue, Error> {
     return new AsyncResult(this.value.then((result) => result.report(problem)));
   }
 
-  fail<NewError>(
-    error: NewError,
-  ): AsyncResult<Value, Problem, NewError | Error> {
+  fail<NewError>(error: NewError): AsyncResult<Value, Issue, NewError | Error> {
     return new AsyncResult(this.value.then((result) => result.fail(error)));
   }
 
   recover<NewValue>(
     fn: (error: Error) => NewValue,
-  ): AsyncResult<Value | NewValue, Problem | Error, never> {
+  ): AsyncResult<Value | NewValue, Issue | Error, never> {
     return new AsyncResult(this.value.then((result) => result.recover(fn)));
   }
 }
 
-type Result<Value, Problem, Error> =
-  | OkResult<Value, Problem, Error>
-  | ErrResult<Value, Problem, Error>;
+type Result<Value, Issue, Error> =
+  | OkResult<Value, Issue, Error>
+  | ErrResult<Value, Issue, Error>;
 
 function ok<Value>(value: Value): Result<Value, never, never> {
   return new OkResult(value);
@@ -248,10 +238,10 @@ function fail<Error>(error: Error): Result<never, never, Error> {
   return new ErrResult(error);
 }
 
-function flatten<Value, Problem, Error>(
-  results: Array<Result<Value, Problem, Error>>,
-): Result<Value[], Problem, Error> {
-  const first: Result<Value[], Problem, Error> = ok([]);
+function flatten<Value, Issue, Error>(
+  results: Array<Result<Value, Issue, Error>>,
+): Result<Value[], Issue, Error> {
+  const first: Result<Value[], Issue, Error> = ok([]);
 
   return results.reduce((result, next) => {
     return result.andThen((values) => next.map((next) => [...values, next]));
@@ -260,17 +250,17 @@ function flatten<Value, Problem, Error>(
 
 function map2<
   FirstValue,
-  FirstProblem,
+  FirstIssue,
   FirstError,
   SecondValue,
-  SecondProblem,
+  SecondIssue,
   SecondError,
   NewValue,
 >(
-  first: Result<FirstValue, FirstProblem, FirstError>,
-  second: Result<SecondValue, SecondProblem, SecondError>,
+  first: Result<FirstValue, FirstIssue, FirstError>,
+  second: Result<SecondValue, SecondIssue, SecondError>,
   fn: (first: FirstValue, second: SecondValue) => NewValue,
-): Result<NewValue, FirstProblem | SecondProblem, FirstError | SecondError> {
+): Result<NewValue, FirstIssue | SecondIssue, FirstError | SecondError> {
   return first.andThen((first) => second.map((second) => fn(first, second)));
 }
 

@@ -1,8 +1,10 @@
-import {
-  report,
-  type AnalysisContext,
-  type DeclarationInfo,
+import type {
+  AnalysisContext,
+  AnalysisResult,
+  DeclarationInfo,
 } from "~/src/analysis/analysis";
+import { reduceContext } from "~/src/analysis/utils";
+import { ok } from "~/src/context";
 import type {
   ArrayLiteralExpression,
   BooleanLiteralExpression,
@@ -22,11 +24,11 @@ import { exhaustive } from "~/src/utils";
 function analyzeIdentifierExpression(
   context: AnalysisContext,
   expression: IdentifierExpression,
-): AnalysisContext {
+): AnalysisResult {
   const declaration = context.frame[expression.name];
 
   if (declaration === undefined) {
-    return report(context, {
+    return ok(context).report({
       type: "UndeclaredVariable",
       node: expression,
     });
@@ -45,7 +47,7 @@ function analyzeIdentifierExpression(
     ],
   };
 
-  return {
+  return ok({
     ...context,
     frame: {
       ...context.frame,
@@ -54,83 +56,91 @@ function analyzeIdentifierExpression(
     declarations: context.declarations.map((declaration) =>
       declaration.id === newDeclaration.id ? newDeclaration : declaration,
     ),
-  };
+  });
 }
 
 function analyzeSafeHttpExpression(
   context: AnalysisContext,
   _expression: SafeHttpExpression,
-): AnalysisContext {
-  return context;
+): AnalysisResult {
+  return ok(context);
 }
 
 function analyseUnsafeHttpExpression(
   context: AnalysisContext,
   expression: UnsafeHttpExpression,
-): AnalysisContext {
+): AnalysisResult {
   return analyzeExpression(context, expression.body);
 }
 
 function analyzeUrlEncodedBodyExpression(
   context: AnalysisContext,
   expression: UrlEncodedBodyExpression,
-): AnalysisContext {
-  return Object.values(expression.fields).reduce(analyzeExpression, context);
+): AnalysisResult {
+  return reduceContext(
+    context,
+    Object.values(expression.fields),
+    analyzeExpression,
+  );
 }
 
 function analyzeJsonEncodedBodyExpression(
   context: AnalysisContext,
   expression: JsonEncodedBodyExpression,
-): AnalysisContext {
+): AnalysisResult {
   return analyzeExpression(context, expression.content);
 }
 
 function analyzeStringLiteralExpression(
   context: AnalysisContext,
   _expression: StringLiteralExpression,
-): AnalysisContext {
-  return context;
+): AnalysisResult {
+  return ok(context);
 }
 
 function analyzeBooleanLiteralExpression(
   context: AnalysisContext,
   _expression: BooleanLiteralExpression,
-): AnalysisContext {
-  return context;
+): AnalysisResult {
+  return ok(context);
 }
 
 function analyzeNumberLiteralExpression(
   context: AnalysisContext,
   _expression: NumberLiteralExpression,
-): AnalysisContext {
-  return context;
+): AnalysisResult {
+  return ok(context);
 }
 
 function analyzeArrayLiteralExpression(
   context: AnalysisContext,
   expression: ArrayLiteralExpression,
-): AnalysisContext {
-  return expression.elements.reduce(analyzeExpression, context);
+): AnalysisResult {
+  return reduceContext(context, expression.elements, analyzeExpression);
 }
 
 function analyzeObjectLiteralExpression(
   context: AnalysisContext,
   expression: ObjectLiteralExpression,
-): AnalysisContext {
-  return Object.values(expression.fields).reduce(analyzeExpression, context);
+): AnalysisResult {
+  return reduceContext(
+    context,
+    Object.values(expression.fields),
+    analyzeExpression,
+  );
 }
 
 function analyzeNullExpression(
   context: AnalysisContext,
   _expression: NullExpression,
-): AnalysisContext {
-  return context;
+): AnalysisResult {
+  return ok(context);
 }
 
 function analyzeExpression(
   context: AnalysisContext,
   expression: Expression,
-): AnalysisContext {
+): AnalysisResult {
   switch (expression.type) {
     case "IdentifierExpression":
       return analyzeIdentifierExpression(context, expression);

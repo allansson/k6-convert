@@ -1,17 +1,19 @@
 import {
-  report,
   withIndex,
   type AnalysisContext,
+  type AnalysisResult,
   type NodeId,
   type NodePath,
   type ScopeInfo,
-  type ScopedStatement,
   type StatementInfo,
 } from "~/src/analysis/analysis";
 import { analyzeExpression } from "~/src/analysis/expressions";
+import { reduceContext } from "~/src/analysis/utils";
+import { ok } from "~/src/context";
 import type {
   AssignStatement,
   ExpressionStatement,
+  GroupStatement,
   LogStatement,
   SleepStatement,
   Statement,
@@ -26,8 +28,8 @@ function toNodeId(path: NodePath): NodeId {
 function analyzeStatements(
   context: AnalysisContext,
   statements: Statement[],
-): AnalysisContext {
-  return statements.reduce((result, statement, index) => {
+): AnalysisResult {
+  return reduceContext(context, statements, (result, statement, index) => {
     const childPath = [...context.self.path, index];
     const childId = toNodeId(childPath);
 
@@ -45,13 +47,13 @@ function analyzeStatements(
     };
 
     return analyzeStatement(statement, newContext);
-  }, context);
+  });
 }
 
-function analyzeScopedStatement(
+function analyzeGroupStatement(
   context: AnalysisContext,
-  statement: ScopedStatement,
-): AnalysisContext {
+  statement: GroupStatement,
+): AnalysisResult {
   const scope: ScopeInfo = {
     id: context.self.id,
     path: context.self.path,
@@ -66,21 +68,23 @@ function analyzeScopedStatement(
     statement.statements,
   );
 
-  return {
-    ...newContext,
-    self: context.self,
-    scope: context.scope,
-    scopes: {
-      ...newContext.scopes,
-      [context.self.id]: scope,
-    },
-  };
+  return newContext.map((newContext) => {
+    return {
+      ...newContext,
+      self: context.self,
+      scope: context.scope,
+      scopes: {
+        ...newContext.scopes,
+        [context.self.id]: scope,
+      },
+    };
+  });
 }
 
-function analyzeDeclaration(
+function analyzeUserVariableDeclaration(
   context: AnalysisContext,
   statement: UserVariableDeclaration,
-): AnalysisContext {
+): AnalysisResult {
   const isRedclared = statement.name in context.frame;
 
   const info = {
@@ -102,7 +106,7 @@ function analyzeDeclaration(
   };
 
   if (isRedclared) {
-    return report(newContext, {
+    return ok(newContext).report({
       type: "DuplicateVariableDeclaration",
       others: context.declarations
         .filter((declaration) => declaration.node.name === statement.name)
@@ -111,45 +115,45 @@ function analyzeDeclaration(
     });
   }
 
-  return newContext;
+  return ok(newContext);
 }
 
 function analyzeAssignStatement(
   context: AnalysisContext,
   statement: AssignStatement,
-): AnalysisContext {
+): AnalysisResult {
   return analyzeExpression(context, statement.expression);
 }
 
 function analyzeLogStatement(
   context: AnalysisContext,
   statement: LogStatement,
-): AnalysisContext {
+): AnalysisResult {
   return analyzeExpression(context, statement.expression);
 }
 
 function analyseExpressionStatement(
   context: AnalysisContext,
   statement: ExpressionStatement,
-): AnalysisContext {
+): AnalysisResult {
   return analyzeExpression(context, statement.expression);
 }
 
 function analyzeSleepStatement(
   context: AnalysisContext,
   _statement: SleepStatement,
-): AnalysisContext {
-  return context;
+): AnalysisResult {
+  return ok(context);
 }
 
 const analyzeStatement = withIndex(
   (statement: Statement, context: AnalysisContext) => {
     switch (statement.type) {
       case "GroupStatement":
-        return analyzeScopedStatement(context, statement);
+        return analyzeGroupStatement(context, statement);
 
       case "UserVariableDeclaration":
-        return analyzeDeclaration(context, statement);
+        return analyzeUserVariableDeclaration(context, statement);
 
       case "AssignStatement":
         return analyzeAssignStatement(context, statement);
@@ -169,4 +173,4 @@ const analyzeStatement = withIndex(
   },
 );
 
-export { analyzeScopedStatement, analyzeStatements };
+export { analyzeStatements };
