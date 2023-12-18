@@ -168,6 +168,47 @@ describe("references", () => {
     ] satisfies typeof analysis.declarations);
   });
 
+  it("should keep track of reference in other declaration expression", () => {
+    const declaration1 = declare("const", "a", string(""));
+
+    const reference = identifier("a");
+
+    const declaration2 = declare("const", "b", reference);
+
+    const root = group("root", [declaration1, declaration2]);
+
+    const analysis = analyze(root).unsafeUnwrap();
+
+    const rootScope = createRootScope(root);
+    const rootParent = createRootParent(root);
+
+    expect(analysis.declarations).toEqual([
+      {
+        id: "/0",
+        path: [0],
+        scope: rootScope,
+        parent: rootParent,
+        node: declaration1,
+        references: [
+          {
+            id: "/1",
+            path: [1],
+            scope: rootScope,
+            node: reference,
+          },
+        ],
+      },
+      {
+        id: "/1",
+        path: [1],
+        scope: rootScope,
+        parent: rootParent,
+        node: declaration2,
+        references: [],
+      },
+    ] satisfies typeof analysis.declarations);
+  });
+
   it("should report an issue when referencing an undeclare variable", () => {
     const declaration = declare("const", "a", string(""));
 

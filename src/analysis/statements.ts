@@ -2,6 +2,7 @@ import {
   withIndex,
   type AnalysisContext,
   type AnalysisResult,
+  type DeclarationInfo,
   type NodeId,
   type NodePath,
   type ScopeInfo,
@@ -87,7 +88,7 @@ function analyzeUserVariableDeclaration(
 ): AnalysisResult {
   const isRedclared = statement.name in context.frame;
 
-  const info = {
+  const declarationInfo: DeclarationInfo = {
     id: context.self.id,
     path: context.self.path,
     scope: context.self.scope,
@@ -100,13 +101,18 @@ function analyzeUserVariableDeclaration(
     ...context,
     frame: {
       ...context.frame,
-      [statement.name]: info,
+      [statement.name]: declarationInfo,
     },
-    declarations: [...context.declarations, info],
+    declarations: [...context.declarations, declarationInfo],
   };
 
+  const analyzedExpression = analyzeExpression(
+    newContext,
+    statement.expression,
+  );
+
   if (isRedclared) {
-    return ok(newContext).report({
+    return analyzedExpression.report({
       type: "DuplicateVariableDeclaration",
       others: context.declarations
         .filter((declaration) => declaration.node.name === statement.name)
@@ -115,7 +121,7 @@ function analyzeUserVariableDeclaration(
     });
   }
 
-  return ok(newContext);
+  return analyzedExpression;
 }
 
 function analyzeAssignStatement(
