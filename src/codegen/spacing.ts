@@ -19,6 +19,19 @@ function spaceBetween<Node extends es.Node>(nodes: Node[]): Node[] {
   return newNodes;
 }
 
+function noSpaceBetween<Node extends es.Node>(nodes: Node[]): Node[] {
+  return nodes.map((node, index) => {
+    if (index === nodes.length - 1) {
+      return node;
+    }
+
+    return {
+      ...node,
+      newLine: "none",
+    };
+  });
+}
+
 function spaceAfter<Node extends es.Node>(nodes: Node[]): Node[] {
   const lastNode = nodes[nodes.length - 1];
 
@@ -49,4 +62,4 @@ function noSpacing<N extends es.Node>(node: N): N {
   };
 }
 
-export { newLine, noSpacing, spaceAfter, spaceBetween };
+export { newLine, noSpaceBetween, noSpacing, spaceAfter, spaceBetween };

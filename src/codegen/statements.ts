@@ -13,7 +13,7 @@ import {
 } from "~/src/codegen/builders/statements";
 import type { EmitContext } from "~/src/codegen/context";
 import { emitExpression } from "~/src/codegen/expressions";
-import { noSpacing, spaceBetween } from "~/src/codegen/spacing";
+import { noSpaceBetween, spaceBetween } from "~/src/codegen/spacing";
 import type {
   AssignStatement,
   ExpressionStatement,
@@ -108,9 +108,11 @@ function emitFragment(
   context: EmitContext,
   fragment: Fragment,
 ): es.Statement[] {
-  return fragment.statements
-    .flatMap((statement) => emitStatement(context, statement))
-    .map(noSpacing);
+  return noSpaceBetween(
+    fragment.statements.flatMap((statement) =>
+      emitStatement(context, statement),
+    ),
+  );
 }
 
 function emitStatement(
