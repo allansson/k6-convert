@@ -41,7 +41,8 @@ interface BooleanLiteralExpression extends AstNode {
 
 interface StringLiteralExpression extends AstNode {
   type: "StringLiteralExpression";
-  value: string;
+  strings: string[];
+  expressions: Expression[];
 }
 
 interface RegexMatchExpression extends AstNode {
@@ -167,7 +168,7 @@ function jsonEncodedBody(
 ): JsonEncodedBodyExpression {
   return {
     type: "JsonEncodedBodyExpression",
-    content: typeof content === "string" ? string(content) : content,
+    content: typeof content === "string" ? string([content], []) : content,
   };
 }
 
@@ -188,7 +189,7 @@ function safeHttp(
   return {
     type: "SafeHttpExpression",
     method,
-    url: typeof url === "string" ? string(url) : url,
+    url: typeof url === "string" ? string([url], []) : url,
     headers,
   };
 }
@@ -202,7 +203,7 @@ function unsafeHttp(
   return {
     type: "UnsafeHttpExpression",
     method,
-    url: typeof url === "string" ? string(url) : url,
+    url: typeof url === "string" ? string([url], []) : url,
     body,
     headers,
   };
@@ -222,10 +223,27 @@ function number(value: number): NumberLiteralExpression {
   };
 }
 
-function string(value: string): StringLiteralExpression {
+function string(value: string): StringLiteralExpression;
+function string(
+  strings: string[],
+  expressions: Expression[],
+): StringLiteralExpression;
+function string(
+  strings: string[] | string,
+  expressions: Expression[] = [],
+): StringLiteralExpression {
+  if (typeof strings === "string") {
+    return {
+      type: "StringLiteralExpression",
+      strings: [strings],
+      expressions,
+    };
+  }
+
   return {
     type: "StringLiteralExpression",
-    value,
+    strings,
+    expressions,
   };
 }
 

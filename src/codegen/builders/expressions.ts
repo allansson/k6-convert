@@ -143,6 +143,24 @@ function logical(
   };
 }
 
+function templateString(
+  quasis: string[],
+  expressions: es.Expression[],
+): es.TemplateLiteral {
+  return {
+    type: "TemplateLiteral",
+    quasis: quasis.map((value, index) => ({
+      type: "TemplateElement",
+      value: {
+        raw: value,
+        cooked: value,
+      },
+      tail: index === quasis.length - 1,
+    })),
+    expressions,
+  };
+}
+
 export {
   array,
   arrow,
@@ -156,4 +174,5 @@ export {
   object,
   optional,
   regex,
+  templateString,
 };

@@ -8,6 +8,7 @@ import {
   member,
   object,
   regex,
+  templateString,
 } from "~/src/codegen/builders/expressions";
 import type { EmitContext } from "~/src/codegen/context";
 import type {
@@ -98,10 +99,26 @@ function emitIdentifier(
 }
 
 function emitStringLiteral(
-  _context: EmitContext,
+  context: EmitContext,
   expression: StringLiteralExpression,
 ): es.Expression {
-  return literal(expression.value);
+  if (expression.expressions.length === 0) {
+    return literal(expression.strings.join(""));
+  }
+
+  if (
+    expression.expressions.length === 1 &&
+    expression.expressions[0] !== undefined
+  ) {
+    return emitExpression(context, expression.expressions[0]);
+  }
+
+  return templateString(
+    expression.strings,
+    expression.expressions.map((expression) =>
+      emitExpression(context, expression),
+    ),
+  );
 }
 
 function emitNumberLiteralExpression(

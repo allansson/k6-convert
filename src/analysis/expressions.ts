@@ -95,9 +95,9 @@ function analyzeJsonEncodedBodyExpression(
 
 function analyzeStringLiteralExpression(
   context: AnalysisContext,
-  _expression: StringLiteralExpression,
+  expression: StringLiteralExpression,
 ): AnalysisResult {
-  return ok(context);
+  return reduceContext(context, expression.expressions, analyzeExpression);
 }
 
 function analyzeBooleanLiteralExpression(

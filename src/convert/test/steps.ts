@@ -25,6 +25,7 @@ import {
   type HttpExpression,
   type IdentifierExpression,
   type Statement,
+  type StringLiteralExpression,
   type UserVariableDeclaration,
 } from "~/src/convert/ast";
 import type {
@@ -46,6 +47,13 @@ import type {
   UrlEncodedBody,
   Variable,
 } from "~/src/convert/test/types";
+import { parse } from "~/src/strings/parse";
+
+function fromInterpolatedString(value: string): StringLiteralExpression {
+  const { strings, variables } = parse(value);
+
+  return string(strings, variables.map(identifier));
+}
 
 interface EncodedBody {
   expression: Expression;
@@ -298,7 +306,7 @@ function fromLogStep(
   _context: ConverterContext,
   step: LogStep,
 ): ConverterResult<Statement> {
-  return ok(log("log", string(step.message)));
+  return ok(log("log", fromInterpolatedString(step.message)));
 }
 
 function fromStep(

@@ -30,6 +30,7 @@ describe("test", () => {
     "test/scenarios",
     "test/http",
     "test/groups",
+    "test/strings",
     "test/variables/general",
     "test/variables/raw",
     "test/variables/regex",
