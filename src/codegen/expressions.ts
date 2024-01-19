@@ -2,9 +2,12 @@ import type * as es from "estree";
 import {
   array,
   call,
+  index,
   literal,
+  logical,
   member,
   object,
+  regex,
 } from "~/src/codegen/builders/expressions";
 import type { EmitContext } from "~/src/codegen/context";
 import type {
@@ -18,11 +21,13 @@ import type {
   NullExpression,
   NumberLiteralExpression,
   ObjectLiteralExpression,
+  RegexMatchExpression,
   SafeHttpExpression,
   StringLiteralExpression,
   UnsafeHttpExpression,
   UrlEncodedBodyExpression,
 } from "~/src/convert/ast";
+import { exhaustive } from "~/src/utils";
 
 function toHttpFunction(method: HttpMethod): string {
   return method.toLowerCase();
@@ -153,7 +158,25 @@ function emitMemberExpression(
   const object = emitExpression(context, expression.object);
   const property = emitExpression(context, expression.property);
 
-  return member(object, property);
+  const result = expression.computed
+    ? index(object, property)
+    : member(object, property);
+
+  if (expression.optional) {
+    return logical(object, "&&", result);
+  }
+
+  return result;
+}
+
+function emitRegexMatchExpression(
+  context: EmitContext,
+  expression: RegexMatchExpression,
+): es.Expression {
+  const pattern = regex(expression.pattern);
+  const target = emitExpression(context, expression.target);
+
+  return call(member(pattern, "exec"), [target]);
 }
 
 function emitExpression(
@@ -196,6 +219,12 @@ function emitExpression(
 
     case "MemberExpression":
       return emitMemberExpression(context, expression);
+
+    case "RegexMatchExpression":
+      return emitRegexMatchExpression(context, expression);
+
+    default:
+      return exhaustive(expression);
   }
 }
 

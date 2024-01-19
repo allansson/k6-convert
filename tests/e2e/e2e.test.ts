@@ -3,6 +3,7 @@ import { readdirSync } from "fs";
 import { readFile } from "fs/promises";
 import { join } from "path";
 import { convert } from "~/src";
+import { TestSchema } from "~/src/convert/test/schema";
 
 function formatName(name: string) {
   return name.replace(/-/g, " ");
@@ -17,7 +18,7 @@ function getTestDirectories(path: string) {
 function getTests(paths: string[]) {
   return paths.flatMap((path) =>
     getTestDirectories(path).map((entry) => ({
-      input: join(entry.path, entry.name, "input.json"),
+      input: join(entry.path, entry.name, "input.ts"),
       output: join(entry.path, entry.name, "output.js"),
       name: `${path} - ${formatName(entry.name)}`,
     })),
@@ -29,19 +30,31 @@ describe("test", () => {
     "test/scenarios",
     "test/http",
     "test/groups",
-    "test/variables",
+    "test/variables/general",
+    "test/variables/raw",
+    "test/variables/regex",
   ]);
 
   it.each(directories)("$name", async ({ input, output }) => {
-    const [inputJSON, outputJS] = await Promise.all([
-      readFile(input, "utf8"),
+    const [testModule, outputJS] = await Promise.all([
+      import(input),
       readFile(output, "utf8"),
     ]);
 
+    const test = await TestSchema.parse(testModule.test);
+
+    if (!test.ok) {
+      throw new Error(
+        `File '${input}' does not export a valid test object:\n${test.errors
+          .map((error) => error.message)
+          .join("    \n")})}`,
+      );
+    }
+
     const result = await convert({
-      source: "json-encoded-test",
+      source: "test",
+      test: test.value,
       target: "script",
-      content: inputJSON,
     });
 
     expect(result.unsafeUnwrap()).toEqual(outputJS);

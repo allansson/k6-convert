@@ -173,6 +173,9 @@ const analyzeStatement = withIndex(
       case "SleepStatement":
         return analyzeSleepStatement(context, statement);
 
+      case "Fragment":
+        return analyzeStatements(context, statement.statements);
+
       default:
         return exhaustive(statement);
     }

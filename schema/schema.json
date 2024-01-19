@@ -67,7 +67,7 @@
             },
             "type": "object"
         },
-        "Record<string,RawVariable>": {
+        "Record<string,Variable>": {
             "type": "object"
         },
         "Record<string,string>": {
@@ -94,7 +94,7 @@
                     "type": "string"
                 },
                 "variables": {
-                    "$ref": "#/definitions/Record<string,RawVariable>"
+                    "$ref": "#/definitions/Record<string,Variable>"
                 }
             },
             "type": "object"
@@ -169,7 +169,7 @@
                     "type": "string"
                 },
                 "variables": {
-                    "$ref": "#/definitions/Record<string,RawVariable>"
+                    "$ref": "#/definitions/Record<string,Variable>"
                 }
             },
             "type": "object"

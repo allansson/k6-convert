@@ -4,6 +4,8 @@ import type {
   HttpRequestBody,
   HttpRequestStep,
   LogStep,
+  RawVariable,
+  RegexVariable,
   SafeHttpRequestStep,
   Scenario,
   SleepStep,
@@ -11,6 +13,7 @@ import type {
   Test,
   UnsafeHttpRequestStep,
   UrlEncodedBody,
+  Variable,
 } from "~/src/convert/test/types";
 
 import {
@@ -26,11 +29,20 @@ import {
   type Parser,
 } from "~/src/validation";
 
-const rawVariable = object({
+const RegexVariableSchema: Parser<RegexVariable> = object({
+  type: literal("regex"),
+  pattern: string(),
+  group: number(),
+});
+
+const RawVariableSchema: Parser<RawVariable> = object({
   type: literal("raw"),
 });
 
-const variable = rawVariable;
+const VariableSchema: Parser<Variable> = union([
+  RawVariableSchema,
+  RegexVariableSchema,
+]);
 
 const JsonEncodedBodySchema: Parser<HttpRequestBody> = object({
   mimeType: literal("application/json"),
@@ -49,7 +61,7 @@ const HttpRequesBodySchema: Parser<HttpRequestBody> = union([
 
 const HttpRequestStepBaseSchema = object({
   url: string(),
-  variables: record(variable),
+  variables: record(VariableSchema),
 });
 
 const SafeHttpRequestSchema: Parser<SafeHttpRequestStep> = extend(

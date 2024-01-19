@@ -11,9 +11,11 @@ import type {
   Expression,
   IdentifierExpression,
   JsonEncodedBodyExpression,
+  MemberExpression,
   NullExpression,
   NumberLiteralExpression,
   ObjectLiteralExpression,
+  RegexMatchExpression,
   SafeHttpExpression,
   StringLiteralExpression,
   UnsafeHttpExpression,
@@ -137,6 +139,22 @@ function analyzeNullExpression(
   return ok(context);
 }
 
+function analyzeMemberExpression(
+  context: AnalysisContext,
+  expression: MemberExpression,
+): AnalysisResult {
+  return analyzeExpression(context, expression.object).andThen((context) =>
+    analyzeExpression(context, expression.property),
+  );
+}
+
+function analyzeRegexMatchExpression(
+  context: AnalysisContext,
+  expression: RegexMatchExpression,
+): AnalysisResult {
+  return analyzeExpression(context, expression.target);
+}
+
 function analyzeExpression(
   context: AnalysisContext,
   expression: Expression,
@@ -174,6 +192,12 @@ function analyzeExpression(
 
     case "NullExpression":
       return analyzeNullExpression(context, expression);
+
+    case "MemberExpression":
+      return analyzeMemberExpression(context, expression);
+
+    case "RegexMatchExpression":
+      return analyzeRegexMatchExpression(context, expression);
 
     default:
       return exhaustive(expression);

@@ -44,6 +44,12 @@ interface StringLiteralExpression extends AstNode {
   value: string;
 }
 
+interface RegexMatchExpression extends AstNode {
+  type: "RegexMatchExpression";
+  pattern: string;
+  target: Expression;
+}
+
 interface IdentifierExpression extends AstNode {
   type: "IdentifierExpression";
   name: string;
@@ -67,6 +73,8 @@ interface MemberExpression extends AstNode {
   type: "MemberExpression";
   object: Expression;
   property: Expression;
+  computed: boolean;
+  optional: boolean;
 }
 
 type Expression =
@@ -78,6 +86,7 @@ type Expression =
   | NullExpression
   | NumberLiteralExpression
   | ObjectLiteralExpression
+  | RegexMatchExpression
   | StringLiteralExpression
   | UrlEncodedBodyExpression
   | MemberExpression;
@@ -234,6 +243,14 @@ function object(fields: Record<string, Expression>): ObjectLiteralExpression {
   };
 }
 
+function regex(pattern: string, target: Expression): RegexMatchExpression {
+  return {
+    type: "RegexMatchExpression",
+    pattern,
+    target,
+  };
+}
+
 function identifier(name: string): IdentifierExpression {
   return {
     type: "IdentifierExpression",
@@ -252,6 +269,22 @@ function member(object: Expression, property: Expression): MemberExpression {
     type: "MemberExpression",
     object,
     property,
+    computed: false,
+    optional: false,
+  };
+}
+
+function index(object: Expression, property: Expression): MemberExpression {
+  return {
+    ...member(object, property),
+    computed: true,
+  };
+}
+
+function optional(expression: MemberExpression): MemberExpression {
+  return {
+    ...expression,
+    optional: true,
   };
 }
 
@@ -379,12 +412,15 @@ export {
   fragment,
   group,
   identifier,
+  index,
   jsonEncodedBody,
   log,
   member,
   nil,
   number,
   object,
+  optional,
+  regex,
   safeHttp,
   scenario,
   sleep,
@@ -410,6 +446,7 @@ export {
   type NullExpression,
   type NumberLiteralExpression,
   type ObjectLiteralExpression,
+  type RegexMatchExpression,
   type SafeHttpExpression,
   type ScenarioDeclaration,
   type SleepStatement,

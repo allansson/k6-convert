@@ -40,7 +40,8 @@
   "scripts": {
     "build": "parcel build",
     "build:schema": "typescript-json-schema src/convert/test/types.ts -o schema/schema.json Test",
-    "test": "jest"
+    "test": "jest",
+    "lint:types": "tsc"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

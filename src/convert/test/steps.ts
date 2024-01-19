@@ -1,4 +1,4 @@
-import { join, ok, reduce } from "~/src/context";
+import { ok, reduce } from "~/src/context";
 import {
   array,
   boolean,
@@ -7,12 +7,15 @@ import {
   fragment,
   group,
   identifier,
+  index,
   jsonEncodedBody,
   log,
   member,
   nil,
   number,
   object,
+  optional,
+  regex,
   safeHttp,
   sleep,
   string,
@@ -35,6 +38,7 @@ import type {
   JsonEncodedBody,
   LogStep,
   RawVariable,
+  RegexVariable,
   SafeHttpRequestStep,
   SleepStep,
   Step,
@@ -148,8 +152,32 @@ function fromRawVariable(
   name: string,
   target: IdentifierExpression,
   _variable: RawVariable,
-): ConverterResult<UserVariableDeclaration> {
-  return ok(declare("const", name, member(target, identifier("body"))));
+): ConverterResult<UserVariableDeclaration[]> {
+  return ok([declare("const", name, member(target, identifier("body")))]);
+}
+
+function fromRegexVariable(
+  _context: ConverterContext,
+  name: string,
+  target: IdentifierExpression,
+  variable: RegexVariable,
+): ConverterResult<UserVariableDeclaration[]> {
+  const intermediate = identifier(name + "Match");
+
+  const match = declare(
+    "const",
+    name + "Match",
+    regex(variable.pattern, member(target, identifier("body"))),
+  );
+
+  return ok([
+    match,
+    declare(
+      "const",
+      name,
+      optional(index(intermediate, number(variable.group))),
+    ),
+  ]);
 }
 
 function fromVariable(
@@ -157,10 +185,13 @@ function fromVariable(
   name: string,
   target: IdentifierExpression,
   variable: Variable,
-) {
+): ConverterResult<UserVariableDeclaration[]> {
   switch (variable.type) {
     case "raw":
       return fromRawVariable(context, name, target, variable);
+
+    case "regex":
+      return fromRegexVariable(context, name, target, variable);
   }
 }
 
@@ -177,10 +208,16 @@ function fromHttpRequestStepWithVariables(
 
   const response = identifier("response");
 
-  const statements = join(
-    variables.map(([name, variable]) => {
-      return fromVariable(context, name, response, variable);
-    }),
+  const variableDeclarations = variables.map(([name, variable]) => {
+    return fromVariable(context, name, response, variable);
+  });
+
+  const statements = reduce(
+    [] as UserVariableDeclaration[],
+    variableDeclarations,
+    (declarations, value) => {
+      return [...declarations, ...value];
+    },
   );
 
   return statements.map((declarations) => [

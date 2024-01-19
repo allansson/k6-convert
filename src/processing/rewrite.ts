@@ -93,6 +93,12 @@ function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
         }),
       };
 
+    case "Fragment":
+      return {
+        ...statement,
+        statements: statement.statements.map((s) => rewrite(s, rewrites)),
+      };
+
     case "ExpressionStatement":
     case "UserVariableDeclaration":
     case "AssignStatement":
@@ -103,7 +109,7 @@ function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
 }
 
 function applyRewrites(
-  statement: ScopedStatement
+  statement: ScopedStatement,
 ): (rewrites: RewriteMap) => Statement {
   return (rewrites) => {
     return rewrite(statement, rewrites);

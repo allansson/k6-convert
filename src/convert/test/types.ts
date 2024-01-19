@@ -4,7 +4,13 @@ interface RawVariable extends Node {
   type: "raw";
 }
 
-type Variable = RawVariable;
+interface RegexVariable extends Node {
+  type: "regex";
+  pattern: string;
+  group: number;
+}
+
+type Variable = RawVariable | RegexVariable;
 
 interface JsonEncodedBody extends Node {
   mimeType: "application/json";
@@ -86,6 +92,7 @@ export type {
   LogStep,
   Node,
   RawVariable,
+  RegexVariable,
   SafeHttpRequestStep,
   Scenario,
   SleepStep,

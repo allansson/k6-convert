@@ -35,6 +35,18 @@ function literal(value: string | number | boolean | null): es.Literal {
   };
 }
 
+function regex(pattern: string): es.Literal {
+  return {
+    type: "Literal",
+    value: new RegExp(pattern),
+    regex: {
+      pattern,
+      flags: "",
+    },
+    raw: JSON.stringify(pattern),
+  };
+}
+
 function object(
   properties: Array<[string, es.Expression]>,
 ): es.ObjectExpression {
@@ -83,6 +95,23 @@ function member(
   }, expression);
 }
 
+function index(
+  object: es.Expression,
+  index: es.Expression,
+): es.MemberExpression {
+  return {
+    type: "MemberExpression",
+    object,
+    property: index,
+    computed: true,
+    optional: false,
+  };
+}
+
+function optional(member: es.MemberExpression): es.MemberExpression {
+  return { ...member, optional: true };
+}
+
 function arrow(
   params: es.Pattern[],
   body: es.Statement[] | es.Expression,
@@ -101,4 +130,30 @@ function nil(): es.Literal {
   return literal(null);
 }
 
-export { array, arrow, call, identifier, literal, member, nil, object };
+function logical(
+  left: es.Expression,
+  operator: es.LogicalOperator,
+  right: es.Expression,
+): es.LogicalExpression {
+  return {
+    type: "LogicalExpression",
+    operator,
+    left,
+    right,
+  };
+}
+
+export {
+  array,
+  arrow,
+  call,
+  identifier,
+  index,
+  literal,
+  logical,
+  member,
+  nil,
+  object,
+  optional,
+  regex,
+};
