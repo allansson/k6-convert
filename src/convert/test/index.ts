@@ -4,7 +4,7 @@ import {
   scenario,
   test,
   type DefaultScenarioDeclaration,
-  type ScenarioDeclaration,
+  type NamedScenarioDeclaration,
   type TestDefinition,
 } from "~/src/convert/ast";
 import {
@@ -32,7 +32,7 @@ function fromDefaultScenario(
 function fromScenario(
   context: ConverterContext,
   input: Scenario,
-): ConverterResult<ScenarioDeclaration> {
+): ConverterResult<NamedScenarioDeclaration> {
   return fromSteps(context, input.steps).map((steps) =>
     scenario(input.name, steps),
   );

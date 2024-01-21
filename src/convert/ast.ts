@@ -95,6 +95,11 @@ type Expression =
 interface GroupStatement extends AstNode {
   type: "GroupStatement";
   name: string;
+  body: BlockStatement;
+}
+
+interface BlockStatement extends AstNode {
+  type: "BlockStatement";
   statements: Statement[];
 }
 
@@ -138,6 +143,7 @@ type Statement =
   | AssignStatement
   | ExpressionStatement
   | GroupStatement
+  | BlockStatement
   | LogStatement
   | SleepStatement
   | UserVariableDeclaration
@@ -145,22 +151,26 @@ type Statement =
 
 interface ScenarioBase extends AstNode {
   name?: string;
-  statements: Statement[];
+  body: BlockStatement;
 }
 
 interface DefaultScenarioDeclaration extends ScenarioBase {
   type: "DefaultScenario";
 }
 
-interface ScenarioDeclaration extends ScenarioBase {
+interface NamedScenarioDeclaration extends ScenarioBase {
   type: "Scenario";
   name: string;
 }
 
+type ScenarioDeclaration =
+  | DefaultScenarioDeclaration
+  | NamedScenarioDeclaration;
+
 interface TestDefinition extends AstNode {
   type: "Test";
   defaultScenario?: DefaultScenarioDeclaration;
-  scenarios: ScenarioDeclaration[];
+  scenarios: NamedScenarioDeclaration[];
 }
 
 function jsonEncodedBody(
@@ -306,11 +316,18 @@ function optional(expression: MemberExpression): MemberExpression {
   };
 }
 
+function block(statements: Statement[]): BlockStatement {
+  return {
+    type: "BlockStatement",
+    statements,
+  };
+}
+
 function group(name: string, statements: Statement[]): GroupStatement {
   return {
     type: "GroupStatement",
     name,
-    statements,
+    body: block(statements),
   };
 }
 
@@ -364,11 +381,14 @@ function fragment(statements: Statement[]): Fragment {
   };
 }
 
-function scenario(name: string, statements: Statement[]): ScenarioDeclaration {
+function scenario(
+  name: string,
+  statements: Statement[],
+): NamedScenarioDeclaration {
   return {
     type: "Scenario",
     name,
-    statements,
+    body: block(statements),
   };
 }
 
@@ -385,24 +405,24 @@ function defaultScenario(
     return {
       type: "DefaultScenario",
       name: undefined,
-      statements: name,
+      body: block(name),
     };
   }
 
   return {
     type: "DefaultScenario",
     name,
-    statements: statements ?? [],
+    body: block(statements ?? []),
   };
 }
 
 function test(defaultScenario: DefaultScenarioDeclaration): TestDefinition;
 function test(
-  scenarios: ScenarioDeclaration[],
+  scenarios: NamedScenarioDeclaration[],
   defaultScenario?: DefaultScenarioDeclaration,
 ): TestDefinition;
 function test(
-  scenarios: ScenarioDeclaration[] | DefaultScenarioDeclaration,
+  scenarios: NamedScenarioDeclaration[] | DefaultScenarioDeclaration,
   defaultScenario?: DefaultScenarioDeclaration,
 ): TestDefinition {
   if (!Array.isArray(scenarios)) {
@@ -423,6 +443,7 @@ function test(
 export {
   array,
   assign,
+  block,
   boolean,
   declare,
   defaultScenario,
@@ -449,6 +470,7 @@ export {
   type ArrayLiteralExpression,
   type AssignStatement,
   type AstNode,
+  type BlockStatement,
   type BooleanLiteralExpression,
   type DefaultScenarioDeclaration,
   type Expression,
@@ -461,6 +483,7 @@ export {
   type JsonEncodedBodyExpression,
   type LogStatement,
   type MemberExpression,
+  type NamedScenarioDeclaration,
   type NullExpression,
   type NumberLiteralExpression,
   type ObjectLiteralExpression,

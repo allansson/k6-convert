@@ -1,12 +1,7 @@
-import { analyze, type Analysis, type ScopedStatement } from "~/src/analysis";
-import type { AnalysisIssue } from "~/src/analysis/analysis";
-import type { Result } from "~/src/context";
-import { assign, declare, type Statement } from "~/src/convert/ast";
-import {
-  Rewriter,
-  applyRewrites,
-  type RewriteMap,
-} from "~/src/processing/rewrite";
+import type { Analysis } from "~/src/analysis";
+import { assign, declare } from "~/src/convert/ast";
+import { Rewriter, type RewriteMap } from "~/src/processing/rewrite";
+import { createTestRewriter } from "~/src/processing/utils";
 import { groupBy } from "~/src/utils";
 
 function generateRewrites(analysis: Analysis): RewriteMap {
@@ -47,8 +42,4 @@ function generateRewrites(analysis: Analysis): RewriteMap {
   return rewriter.done();
 }
 
-export function mergeDeclarations(
-  statement: ScopedStatement,
-): Result<Statement, AnalysisIssue, never> {
-  return analyze(statement).map(generateRewrites).map(applyRewrites(statement));
-}
+export const mergeDeclarations = createTestRewriter(generateRewrites);

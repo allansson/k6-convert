@@ -1,5 +1,5 @@
-import type { ScopedStatement } from "~/src/analysis/analysis";
-import type { Statement } from "~/src/convert/ast";
+import type { BlockStatement, Statement } from "~/src/convert/ast";
+import { exhaustive } from "~/src/utils";
 
 interface InsertBefore {
   type: "InsertBefore";
@@ -67,36 +67,52 @@ class Rewriter {
 
 type RewriteMap = Map<Statement, Rewrite>;
 
+function rewriteStatements(
+  statements: Statement[],
+  rewrites: RewriteMap,
+): Statement[] {
+  return statements.flatMap((s) => {
+    const op = rewrites.get(s);
+
+    switch (op?.type) {
+      case "InsertBefore":
+        return [op.statement, rewrite(s, rewrites)];
+
+      case "InsertAfter":
+        return [rewrite(s, rewrites), op.statement];
+
+      case "Replace":
+        return [op.statement];
+
+      case "Remove":
+        return [];
+    }
+
+    return [rewrite(s, rewrites)];
+  });
+}
+
 function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
   switch (statement.type) {
+    case "BlockStatement":
+      return {
+        ...statement,
+        statements: rewriteStatements(statement.statements, rewrites),
+      };
+
     case "GroupStatement":
       return {
         ...statement,
-        statements: statement.statements.flatMap((s) => {
-          const op = rewrites.get(s);
-
-          switch (op?.type) {
-            case "InsertBefore":
-              return [op.statement, rewrite(s, rewrites)];
-
-            case "InsertAfter":
-              return [rewrite(s, rewrites), op.statement];
-
-            case "Replace":
-              return [op.statement];
-
-            case "Remove":
-              return [];
-          }
-
-          return [rewrite(s, rewrites)];
-        }),
+        body: {
+          ...statement.body,
+          statements: rewriteStatements(statement.body.statements, rewrites),
+        },
       };
 
     case "Fragment":
       return {
         ...statement,
-        statements: statement.statements.map((s) => rewrite(s, rewrites)),
+        statements: rewriteStatements(statement.statements, rewrites),
       };
 
     case "ExpressionStatement":
@@ -105,14 +121,20 @@ function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
     case "SleepStatement":
     case "LogStatement":
       return statement;
+
+    default:
+      return exhaustive(statement);
   }
 }
 
 function applyRewrites(
-  statement: ScopedStatement,
-): (rewrites: RewriteMap) => Statement {
+  statement: BlockStatement,
+): (rewrites: RewriteMap) => BlockStatement {
   return (rewrites) => {
-    return rewrite(statement, rewrites);
+    return {
+      ...statement,
+      statements: rewriteStatements(statement.statements, rewrites),
+    };
   };
 }
 

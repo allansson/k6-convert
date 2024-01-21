@@ -12,11 +12,11 @@ import { func } from "~/src/codegen/builders/statements";
 import { EmitContext, type Import } from "~/src/codegen/context";
 import { format } from "~/src/codegen/formatter";
 import { spaceAfter, spaceBetween } from "~/src/codegen/spacing";
-import { emitBody } from "~/src/codegen/statements";
+import { emitBlockStatement } from "~/src/codegen/statements";
 import { fromPromise } from "~/src/context";
 import type {
   DefaultScenarioDeclaration,
-  ScenarioDeclaration,
+  NamedScenarioDeclaration,
   TestDefinition,
 } from "~/src/convert/ast";
 
@@ -33,10 +33,10 @@ function emitImport(target: Import): es.ImportDeclaration {
 
 function emitNamedScenario(
   context: EmitContext,
-  scenario: ScenarioDeclaration,
+  scenario: NamedScenarioDeclaration,
 ): es.ExportNamedDeclaration {
   return namedExport(
-    func(scenario.name, emitBody(context, scenario.statements)),
+    func(scenario.name, emitBlockStatement(context, scenario.body)),
   );
 }
 
@@ -45,7 +45,7 @@ function emitDefaultScenario(
   scenario: DefaultScenarioDeclaration,
 ): es.ExportDefaultDeclaration {
   return defaultExport(
-    func(scenario.name, emitBody(context, scenario.statements)),
+    func(scenario.name, emitBlockStatement(context, scenario.body)),
   );
 }
 

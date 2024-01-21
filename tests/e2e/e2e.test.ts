@@ -34,6 +34,7 @@ describe("test", () => {
     "test/variables/general",
     "test/variables/raw",
     "test/variables/regex",
+    "test/variables/scoping",
   ]);
 
   it.each(directories)("$name", async ({ input, output }) => {

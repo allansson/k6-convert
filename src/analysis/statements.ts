@@ -47,7 +47,7 @@ function analyzeStatements(
       self: childScope,
     };
 
-    return analyzeStatement(statement, newContext);
+    return analyzeStatement(newContext, statement);
   });
 }
 
@@ -61,12 +61,12 @@ function analyzeGroupStatement(
     node: statement,
   };
 
-  const newContext = analyzeStatements(
+  const newContext = analyzeStatement(
     {
       ...context,
       scope,
     },
-    statement.statements,
+    statement.body,
   );
 
   return newContext.map((newContext) => {
@@ -153,8 +153,11 @@ function analyzeSleepStatement(
 }
 
 const analyzeStatement = withIndex(
-  (statement: Statement, context: AnalysisContext) => {
+  (context: AnalysisContext, statement: Statement) => {
     switch (statement.type) {
+      case "BlockStatement":
+        return analyzeStatements(context, statement.statements);
+
       case "GroupStatement":
         return analyzeGroupStatement(context, statement);
 

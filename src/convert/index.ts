@@ -10,6 +10,8 @@ import { fromTest, type TestInput } from "~/src/convert/test";
 import type { ConverterIssue } from "~/src/convert/test/context";
 import type { Test } from "~/src/convert/test/types";
 import type { JsonDecodeError } from "~/src/convert/types";
+import { mergeDeclarations } from "~/src/processing/mergeDeclarations";
+import { hoistVariables } from "~/src/processing/variableHoisting";
 
 type ToTestInput = HarInput | JsonEncodedHarInput | JsonEncodedTestInput;
 
@@ -50,7 +52,10 @@ function toScript(
       return fromHar(input.har).andThen((har) => toScript({ ...input, har }));
 
     case "test":
-      return fromTest(input.test).andThen(emit);
+      return fromTest(input.test)
+        .andThen(hoistVariables)
+        .andThen(mergeDeclarations)
+        .andThen(emit);
   }
 }
 

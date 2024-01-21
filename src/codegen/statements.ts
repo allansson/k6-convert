@@ -16,6 +16,7 @@ import { emitExpression } from "~/src/codegen/expressions";
 import { noSpaceBetween, spaceBetween } from "~/src/codegen/spacing";
 import type {
   AssignStatement,
+  BlockStatement,
   ExpressionStatement,
   Fragment,
   GroupStatement,
@@ -25,11 +26,11 @@ import type {
   UserVariableDeclaration,
 } from "~/src/convert/ast";
 
-function emitBody(
+function emitBlockStatement(
   context: EmitContext,
-  statements: Statement[],
+  statement: BlockStatement,
 ): es.Statement[] {
-  const body = statements.flatMap((statement) => {
+  const body = statement.statements.flatMap((statement) => {
     return emitStatement(context, statement);
   });
 
@@ -44,7 +45,7 @@ function emitGroupStatement(
 
   const expression = call(identifier("group"), [
     literal(statement.name),
-    arrow([], emitBody(context, statement.statements)),
+    arrow([], emitBlockStatement(context, statement.body)),
   ]);
 
   return expressionStatement(expression);
@@ -120,6 +121,9 @@ function emitStatement(
   statement: Statement,
 ): es.Statement | es.Statement[] {
   switch (statement.type) {
+    case "BlockStatement":
+      return emitBlockStatement(context, statement);
+
     case "ExpressionStatement":
       return emitExpressionStatement(context, statement);
 
@@ -143,4 +147,4 @@ function emitStatement(
   }
 }
 
-export { emitBody, emitStatement };
+export { emitBlockStatement, emitStatement };

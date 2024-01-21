@@ -45,7 +45,7 @@ interface ReferenceInfo {
 interface ScopeInfo {
   id: NodeId;
   path: NodePath;
-  node: ScopedStatement;
+  node: Statement;
 }
 
 type ScopedStatementInfo = NodeInfo<ScopedStatement>;
@@ -76,8 +76,8 @@ interface Analysis {
 }
 
 type AnalysisFn<N extends AstNode> = (
-  node: N,
   context: AnalysisContext,
+  node: N,
 ) => AnalysisResult;
 
 type AnalysisResult = Result<AnalysisContext, AnalysisIssue, never>;
@@ -87,14 +87,17 @@ function toNodeId(path: NodePath): NodeId {
 }
 
 function withIndex<N extends AstNode>(fn: AnalysisFn<N>): AnalysisFn<N> {
-  return (node: N, context: AnalysisContext) => {
-    return fn(node, {
-      ...context,
-      statements: {
-        ...context.statements,
-        [context.self.id]: context.self,
+  return (context: AnalysisContext, node: N) => {
+    return fn(
+      {
+        ...context,
+        statements: {
+          ...context.statements,
+          [context.self.id]: context.self,
+        },
       },
-    });
+      node,
+    );
   };
 }
 

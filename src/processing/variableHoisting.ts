@@ -1,24 +1,12 @@
 import {
-  analyze,
   toNodeId,
   type Analysis,
   type DeclarationInfo,
   type NodeId,
 } from "~/src/analysis";
-import type { AnalysisIssue } from "~/src/analysis/analysis";
-import type { Result } from "~/src/context";
-import {
-  assign,
-  declare,
-  nil,
-  type GroupStatement,
-  type Statement,
-} from "~/src/convert/ast";
-import {
-  Rewriter,
-  applyRewrites,
-  type RewriteMap,
-} from "~/src/processing/rewrite";
+import { assign, declare, nil } from "~/src/convert/ast";
+import { Rewriter, type RewriteMap } from "~/src/processing/rewrite";
+import { createTestRewriter } from "~/src/processing/utils";
 
 function findSharedScope(declaration: DeclarationInfo): NodeId {
   for (let i = 0; i < declaration.scope.path.length; i++) {
@@ -66,8 +54,4 @@ function generateRewrites(analysis: Analysis): RewriteMap {
   return rewriter.done();
 }
 
-export function hoistVariables(
-  statement: GroupStatement,
-): Result<Statement, AnalysisIssue, never> {
-  return analyze(statement).map(generateRewrites).map(applyRewrites(statement));
-}
+export const hoistVariables = createTestRewriter(generateRewrites);

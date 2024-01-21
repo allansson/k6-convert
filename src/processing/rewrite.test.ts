@@ -1,5 +1,5 @@
 import { expect, it } from "@jest/globals";
-import { group, log, nil, sleep } from "~/src/convert/ast";
+import { fragment, group, log, nil, sleep } from "~/src/convert/ast";
 import { Rewriter, rewrite } from "~/src/processing/rewrite";
 
 it("should insert statement before node in group", () => {
@@ -51,4 +51,21 @@ it("should remove statement from group", () => {
   const expected = group("root", []);
 
   expect(rewrite(tree, rewrites)).toEqual(expected);
+});
+
+it("should process nodes inside a fragment", () => {
+  const sleep1 = sleep(1);
+  const sleep2 = sleep(2);
+  const sleep3 = sleep(3);
+
+  const target = fragment([sleep1, sleep2]);
+
+  const tree = group("root", [target]);
+
+  const rewrites = new Rewriter().remove(sleep1).replace(sleep2, sleep3).done();
+
+  const expected = group("root", [fragment([sleep3])]);
+  const actual = rewrite(tree, rewrites);
+
+  expect(actual).toEqual(expected);
 });

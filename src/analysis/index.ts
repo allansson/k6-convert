@@ -2,21 +2,21 @@ import type {
   Analysis,
   AnalysisContext,
   AnalysisIssue,
-  ScopedStatement,
-  ScopedStatementInfo,
   ScopeInfo,
+  StatementInfo,
 } from "~/src/analysis/analysis";
 import { analyzeStatements } from "~/src/analysis/statements";
 import type { Result } from "~/src/context";
+import type { BlockStatement } from "~/src/convert/ast";
 
-function rootContext(statement: ScopedStatement): AnalysisContext {
+function rootContext(statement: BlockStatement): AnalysisContext {
   const scope: ScopeInfo = {
     id: "/",
     path: [],
     node: statement,
   };
 
-  const self: ScopedStatementInfo = {
+  const self: StatementInfo = {
     id: "/",
     path: [],
     scope,
@@ -39,7 +39,7 @@ function rootContext(statement: ScopedStatement): AnalysisContext {
 }
 
 function analyze(
-  statement: ScopedStatement,
+  statement: BlockStatement,
 ): Result<Analysis, AnalysisIssue, never> {
   return analyzeStatements(rootContext(statement), statement.statements).map(
     ({ statements, scopes, declarations }) => ({

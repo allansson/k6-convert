@@ -1,13 +1,17 @@
 import { describe, expect, it } from "@jest/globals";
-import {
-  analyze,
-  type ScopeInfo,
-  type ScopedStatement,
-  type ScopedStatementInfo,
-} from "~/src/analysis";
-import { declare, group, identifier, log, string } from "~/src/convert/ast";
+import { analyze, type ScopeInfo, type StatementInfo } from "~/src/analysis";
 
-function createRootScope(statement: ScopedStatement): ScopeInfo {
+import {
+  block,
+  declare,
+  group,
+  identifier,
+  log,
+  string,
+  type BlockStatement,
+} from "~/src/convert/ast";
+
+function createRootScope(statement: BlockStatement): ScopeInfo {
   return {
     id: "/",
     path: [],
@@ -15,7 +19,7 @@ function createRootScope(statement: ScopedStatement): ScopeInfo {
   };
 }
 
-function createRootParent(statement: ScopedStatement): ScopedStatementInfo {
+function createRootParent(statement: BlockStatement): StatementInfo {
   return {
     id: "/",
     path: [],
@@ -30,7 +34,7 @@ describe("indexing", () => {
     const groupNode = group("group", []);
     const declarationNode = declare("const", "a", string(""));
 
-    const root = group("root", [groupNode, declarationNode]);
+    const root = block([groupNode, declarationNode]);
 
     const analysis = analyze(root).unsafeUnwrap();
 
@@ -60,7 +64,7 @@ describe("indexing", () => {
 describe("scopes", () => {
   it("should register a new scope for each group", () => {
     const child = group("child", []);
-    const root = group("root", [child]);
+    const root = block([child]);
 
     const analysis = analyze(root).unsafeUnwrap();
 
@@ -80,7 +84,7 @@ describe("declarations", () => {
     const declaration1 = declare("const", "a", string(""));
     const declaration2 = declare("const", "a", string(""));
 
-    const root = group("root", [declaration1, declaration2]);
+    const root = block([declaration1, declaration2]);
 
     const analysis = analyze(root).unsafeUnwrap();
 
@@ -111,7 +115,7 @@ describe("declarations", () => {
     const declaration = declare("const", "a", string(""));
     const redeclaration = declare("const", "a", string(""));
 
-    const root = group("root", [declaration, group("child", [redeclaration])]);
+    const root = block([declaration, group("child", [redeclaration])]);
 
     const analysis = analyze(root);
 
@@ -132,7 +136,7 @@ describe("references", () => {
     const reference1 = identifier("a");
     const reference2 = identifier("a");
 
-    const root = group("root", [
+    const root = block([
       declaration,
       log("log", reference1),
       log("log", reference2),
@@ -175,7 +179,7 @@ describe("references", () => {
 
     const declaration2 = declare("const", "b", reference);
 
-    const root = group("root", [declaration1, declaration2]);
+    const root = block([declaration1, declaration2]);
 
     const analysis = analyze(root).unsafeUnwrap();
 
@@ -214,7 +218,7 @@ describe("references", () => {
 
     const reference = identifier("b");
 
-    const root = group("root", [declaration, log("log", reference)]);
+    const root = block([declaration, log("log", reference)]);
 
     const result = analyze(root);
 
@@ -239,7 +243,7 @@ describe("references", () => {
       log("log", reference2),
     ]);
 
-    const root = group("root", [declaration1, child]);
+    const root = block([declaration1, child]);
 
     const analysis = analyze(root).unsafeUnwrap();
 
