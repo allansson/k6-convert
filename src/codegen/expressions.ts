@@ -16,7 +16,7 @@ import type {
   BooleanLiteralExpression,
   Expression,
   HttpMethod,
-  IdentifierExpression,
+  Identifier,
   JsonEncodedBodyExpression,
   MemberExpression,
   NullExpression,
@@ -90,7 +90,7 @@ function emitJsonEncodedBodyExpression(
 
 function emitIdentifier(
   _context: EmitContext,
-  expression: IdentifierExpression,
+  expression: Identifier,
 ): es.Expression {
   return {
     type: "Identifier",

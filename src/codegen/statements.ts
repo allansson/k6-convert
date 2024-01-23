@@ -23,7 +23,7 @@ import type {
   LogStatement,
   SleepStatement,
   Statement,
-  UserVariableDeclaration,
+  VariableDeclaration,
 } from "~/src/convert/ast";
 
 function emitBlockStatement(
@@ -78,20 +78,20 @@ function emitAssignStatement(
   statement: AssignStatement,
 ): es.Statement {
   const expression = assign(
-    statement.name,
+    statement.identifier.name,
     emitExpression(context, statement.expression),
   );
 
   return expressionStatement(expression);
 }
 
-function emitUserVariableDeclaration(
+function emitVariableDeclaration(
   context: EmitContext,
-  statement: UserVariableDeclaration,
+  statement: VariableDeclaration,
 ): es.Statement {
   return declare(
     statement.kind,
-    statement.name,
+    statement.identifier.name,
     emitExpression(context, statement.expression),
   );
 }
@@ -139,8 +139,8 @@ function emitStatement(
     case "AssignStatement":
       return emitAssignStatement(context, statement);
 
-    case "UserVariableDeclaration":
-      return emitUserVariableDeclaration(context, statement);
+    case "VariableDeclaration":
+      return emitVariableDeclaration(context, statement);
 
     case "Fragment":
       return emitFragment(context, statement);

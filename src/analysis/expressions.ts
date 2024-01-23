@@ -9,7 +9,7 @@ import type {
   ArrayLiteralExpression,
   BooleanLiteralExpression,
   Expression,
-  IdentifierExpression,
+  Identifier,
   JsonEncodedBodyExpression,
   MemberExpression,
   NullExpression,
@@ -23,9 +23,9 @@ import type {
 } from "~/src/convert/ast";
 import { exhaustive } from "~/src/utils";
 
-function analyzeIdentifierExpression(
+function analyzeIdentifier(
   context: AnalysisContext,
-  expression: IdentifierExpression,
+  expression: Identifier,
 ): AnalysisResult {
   const declaration = context.frame[expression.name];
 
@@ -161,7 +161,7 @@ function analyzeExpression(
 ): AnalysisResult {
   switch (expression.type) {
     case "IdentifierExpression":
-      return analyzeIdentifierExpression(context, expression);
+      return analyzeIdentifier(context, expression);
 
     case "SafeHttpExpression":
       return analyzeSafeHttpExpression(context, expression);

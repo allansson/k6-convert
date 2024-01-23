@@ -15,7 +15,7 @@ function generateRewrites(analysis: Analysis): RewriteMap {
   for (const declarations of Object.values(declarationsByScope)) {
     const declarationsByVariable = groupBy(
       declarations,
-      (declaration) => declaration.node.name,
+      (declaration) => declaration.node.identifier.name,
     );
 
     for (const [first, ...duplicates] of Object.values(
@@ -27,13 +27,13 @@ function generateRewrites(analysis: Analysis): RewriteMap {
 
       rewriter.replace(
         first.node,
-        declare("let", first.node.name, first.node.expression),
+        declare("let", first.node.identifier.name, first.node.expression),
       );
 
       for (const duplicate of duplicates) {
         rewriter.replace(
           duplicate.node,
-          assign(duplicate.node.name, duplicate.node.expression),
+          assign(duplicate.node.identifier.name, duplicate.node.expression),
         );
       }
     }

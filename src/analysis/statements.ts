@@ -18,7 +18,7 @@ import type {
   LogStatement,
   SleepStatement,
   Statement,
-  UserVariableDeclaration,
+  VariableDeclaration,
 } from "~/src/convert/ast";
 import { exhaustive } from "~/src/utils";
 
@@ -82,11 +82,11 @@ function analyzeGroupStatement(
   });
 }
 
-function analyzeUserVariableDeclaration(
+function analyzeVariableDeclaration(
   context: AnalysisContext,
-  statement: UserVariableDeclaration,
+  statement: VariableDeclaration,
 ): AnalysisResult {
-  const isRedclared = statement.name in context.frame;
+  const isRedclared = statement.identifier.name in context.frame;
 
   const declarationInfo: DeclarationInfo = {
     id: context.self.id,
@@ -101,7 +101,7 @@ function analyzeUserVariableDeclaration(
     ...context,
     frame: {
       ...context.frame,
-      [statement.name]: declarationInfo,
+      [statement.identifier.name]: declarationInfo,
     },
     declarations: [...context.declarations, declarationInfo],
   };
@@ -115,7 +115,10 @@ function analyzeUserVariableDeclaration(
     return analyzedExpression.report({
       type: "DuplicateVariableDeclaration",
       others: context.declarations
-        .filter((declaration) => declaration.node.name === statement.name)
+        .filter(
+          (declaration) =>
+            declaration.node.identifier.name === statement.identifier.name,
+        )
         .map((declaration) => declaration.node),
       node: statement,
     });
@@ -161,8 +164,8 @@ const analyzeStatement = withIndex(
       case "GroupStatement":
         return analyzeGroupStatement(context, statement);
 
-      case "UserVariableDeclaration":
-        return analyzeUserVariableDeclaration(context, statement);
+      case "VariableDeclaration":
+        return analyzeVariableDeclaration(context, statement);
 
       case "AssignStatement":
         return analyzeAssignStatement(context, statement);

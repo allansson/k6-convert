@@ -23,10 +23,10 @@ import {
   urlEncodedBody,
   type Expression,
   type HttpExpression,
-  type IdentifierExpression,
+  type Identifier,
   type Statement,
   type StringLiteralExpression,
-  type UserVariableDeclaration,
+  type VariableDeclaration,
 } from "~/src/convert/ast";
 import type {
   ConverterContext,
@@ -158,18 +158,18 @@ function fromHttpRequestBody(
 function fromRawVariable(
   _context: ConverterContext,
   name: string,
-  target: IdentifierExpression,
+  target: Identifier,
   _variable: RawVariable,
-): ConverterResult<UserVariableDeclaration[]> {
+): ConverterResult<VariableDeclaration[]> {
   return ok([declare("const", name, member(target, identifier("body")))]);
 }
 
 function fromRegexVariable(
   _context: ConverterContext,
   name: string,
-  target: IdentifierExpression,
+  target: Identifier,
   variable: RegexVariable,
-): ConverterResult<UserVariableDeclaration[]> {
+): ConverterResult<VariableDeclaration[]> {
   const intermediate = identifier(name + "Match");
 
   const match = declare(
@@ -191,9 +191,9 @@ function fromRegexVariable(
 function fromVariable(
   context: ConverterContext,
   name: string,
-  target: IdentifierExpression,
+  target: Identifier,
   variable: Variable,
-): ConverterResult<UserVariableDeclaration[]> {
+): ConverterResult<VariableDeclaration[]> {
   switch (variable.type) {
     case "raw":
       return fromRawVariable(context, name, target, variable);
@@ -221,7 +221,7 @@ function fromHttpRequestStepWithVariables(
   });
 
   const statements = reduce(
-    [] as UserVariableDeclaration[],
+    [] as VariableDeclaration[],
     variableDeclarations,
     (declarations, value) => {
       return [...declarations, ...value];

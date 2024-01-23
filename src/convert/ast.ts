@@ -7,7 +7,7 @@ interface JsonEncodedBodyExpression extends AstNode {
 
 interface UrlEncodedBodyExpression extends AstNode {
   type: "UrlEncodedBodyExpression";
-  fields: Record<string, StringLiteralExpression | IdentifierExpression>;
+  fields: Record<string, StringLiteralExpression | Identifier>;
 }
 
 interface SafeHttpExpression extends AstNode {
@@ -51,7 +51,7 @@ interface RegexMatchExpression extends AstNode {
   target: Expression;
 }
 
-interface IdentifierExpression extends AstNode {
+interface Identifier extends AstNode {
   type: "IdentifierExpression";
   name: string;
 }
@@ -79,10 +79,10 @@ interface MemberExpression extends AstNode {
 }
 
 type Expression =
+  | Identifier
   | ArrayLiteralExpression
   | BooleanLiteralExpression
   | HttpExpression
-  | IdentifierExpression
   | JsonEncodedBodyExpression
   | NullExpression
   | NumberLiteralExpression
@@ -103,16 +103,16 @@ interface BlockStatement extends AstNode {
   statements: Statement[];
 }
 
-interface UserVariableDeclaration extends AstNode {
-  type: "UserVariableDeclaration";
+interface VariableDeclaration extends AstNode {
+  type: "VariableDeclaration";
   kind: "const" | "let";
-  name: string;
+  identifier: Identifier;
   expression: Expression;
 }
 
 interface AssignStatement extends AstNode {
   type: "AssignStatement";
-  name: string;
+  identifier: Identifier;
   expression: Expression;
 }
 
@@ -146,7 +146,7 @@ type Statement =
   | BlockStatement
   | LogStatement
   | SleepStatement
-  | UserVariableDeclaration
+  | VariableDeclaration
   | Fragment;
 
 interface ScenarioBase extends AstNode {
@@ -279,7 +279,7 @@ function regex(pattern: string, target: Expression): RegexMatchExpression {
   };
 }
 
-function identifier(name: string): IdentifierExpression {
+function identifier(name: string): Identifier {
   return {
     type: "IdentifierExpression",
     name,
@@ -335,11 +335,11 @@ function declare(
   kind: "const" | "let",
   name: string,
   expression: Expression,
-): UserVariableDeclaration {
+): VariableDeclaration {
   return {
-    type: "UserVariableDeclaration",
+    type: "VariableDeclaration",
     kind,
-    name,
+    identifier: identifier(name),
     expression,
   };
 }
@@ -347,7 +347,7 @@ function declare(
 function assign(name: string, expression: Expression): AssignStatement {
   return {
     type: "AssignStatement",
-    name,
+    identifier: identifier(name),
     expression,
   };
 }
@@ -479,7 +479,7 @@ export {
   type GroupStatement,
   type HttpExpression,
   type HttpMethod,
-  type IdentifierExpression,
+  type Identifier,
   type JsonEncodedBodyExpression,
   type LogStatement,
   type MemberExpression,
@@ -496,5 +496,5 @@ export {
   type TestDefinition,
   type UnsafeHttpExpression,
   type UrlEncodedBodyExpression,
-  type UserVariableDeclaration,
+  type VariableDeclaration,
 };

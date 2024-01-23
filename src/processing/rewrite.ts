@@ -116,7 +116,7 @@ function rewrite(statement: Statement, rewrites: RewriteMap): Statement {
       };
 
     case "ExpressionStatement":
-    case "UserVariableDeclaration":
+    case "VariableDeclaration":
     case "AssignStatement":
     case "SleepStatement":
     case "LogStatement":

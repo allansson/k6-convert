@@ -2,20 +2,20 @@ import type { Result } from "~/src/context";
 import type {
   AstNode,
   GroupStatement,
-  IdentifierExpression,
+  Identifier,
   Statement,
-  UserVariableDeclaration,
+  VariableDeclaration,
 } from "~/src/convert/ast";
 
 interface UndeclaredVariableIssue {
   type: "UndeclaredVariable";
-  node: IdentifierExpression;
+  node: Identifier;
 }
 
 interface DuplicateVariableDeclarationIssue {
   type: "DuplicateVariableDeclaration";
-  others: UserVariableDeclaration[];
-  node: UserVariableDeclaration;
+  others: VariableDeclaration[];
+  node: VariableDeclaration;
 }
 
 type AnalysisIssue =
@@ -39,7 +39,7 @@ interface ReferenceInfo {
   id: NodeId;
   path: NodePath;
   scope: ScopeInfo;
-  node: IdentifierExpression;
+  node: Identifier;
 }
 
 interface ScopeInfo {
@@ -50,7 +50,7 @@ interface ScopeInfo {
 
 type ScopedStatementInfo = NodeInfo<ScopedStatement>;
 type StatementInfo = NodeInfo<Statement>;
-type DeclarationInfo = NodeInfo<UserVariableDeclaration> & {
+type DeclarationInfo = NodeInfo<VariableDeclaration> & {
   references: ReferenceInfo[];
 };
 

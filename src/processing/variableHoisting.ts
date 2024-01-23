@@ -42,12 +42,12 @@ function generateRewrites(analysis: Analysis): RewriteMap {
 
     rewriter.insertBefore(
       scope.node,
-      declare("let", declaration.node.name, nil()),
+      declare("let", declaration.node.identifier.name, nil()),
     );
 
     rewriter.replace(
       declaration.node,
-      assign(declaration.node.name, declaration.node.expression),
+      assign(declaration.node.identifier.name, declaration.node.expression),
     );
   }
 
