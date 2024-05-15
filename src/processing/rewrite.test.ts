@@ -1,4 +1,4 @@
-import { expect, it } from "@jest/globals";
+import { expect, it } from "vitest";
 import { fragment, group, log, nil, sleep } from "~/src/convert/ast";
 import { Rewriter, rewrite } from "~/src/processing/rewrite";
 

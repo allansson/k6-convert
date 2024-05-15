@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import dedent from "dedent";
+import { describe, expect, it } from "vitest";
 import { emit } from "~/src/codegen";
 import {
   assign,

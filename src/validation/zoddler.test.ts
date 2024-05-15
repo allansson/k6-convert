@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vitest";
 import {
   array,
   boolean,
@@ -66,7 +66,7 @@ describe("boolean", () => {
 describe("literal", () => {
   it("should succeed when input is the expected value", () => {
     const result = literal("hello").parse(
-      "hello"
+      "hello",
     ) satisfies ParseResult<"hello">;
 
     expect(result.ok).toBe(true);

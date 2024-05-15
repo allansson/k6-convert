@@ -1,4 +1,4 @@
-import { expect, it } from "@jest/globals";
+import { expect, it } from "vitest";
 import { parse } from "~/src/strings/parse";
 
 it("should parse an empty string", () => {

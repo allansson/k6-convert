@@ -1,7 +1,7 @@
-import { it } from "@jest/globals";
 import { readdirSync } from "fs";
 import { readFile } from "fs/promises";
 import { join } from "path";
+import { describe, expect, it } from "vitest";
 import { convert } from "~/src";
 import { TestSchema } from "~/src/convert/test/schema";
 
