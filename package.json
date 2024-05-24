@@ -42,7 +42,8 @@
     "build:schema": "typescript-json-schema src/convert/test/types.ts -o schema/schema.json Test",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint:types": "tsc"
+    "lint:types": "tsc",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@parcel/packager-ts": "^2.12.0",
